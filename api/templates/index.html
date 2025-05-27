@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hatch Messaging</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .logo {
+            font-size: 3rem;
+            font-weight: 300;
+            color: white;
+            margin-bottom: 2rem;
+            letter-spacing: 2px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Main Container */
+        .container {
+            display: flex;
+            height: 100vh;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+            overflow: hidden;
+        }
+
+        .container.visible {
+            opacity: 1;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 350px;
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header h1 {
+            color: #333;
+            font-size: 1.5rem;
+            font-weight: 300;
+        }
+
+        .conversations-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+
+        .conversation-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+            min-height: 60px; /* Minimum height to accommodate wrapped text */
+            overflow: hidden;
+        }
+
+        .conversation-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .conversation-item.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .conversation-contact {
+            font-weight: 600;
+            margin-bottom: 5px;
+            margin-right: 80px; /* Space for time */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            -webkit-hyphens: auto;
+            hyphens: auto;
+            line-height: 1.3;
+        }
+
+        .conversation-preview {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+            margin-right: 80px; /* Space for time */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            line-height: 1.2;
+        }
+
+        .conversation-item.active .conversation-preview {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .conversation-time {
+            font-size: 0.8rem;
+            color: #999;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+        }
+
+        .conversation-item.active .conversation-time {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chat-contact {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .chat-status {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* Phone Mockup */
+        .phone-container {
+            flex: 1;
+            background: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .phone {
+            width: 100%;
+            max-width: 500px;
+            height: 75%;
+            background: black;
+            border-radius: 25px;
+            padding: 20px 5px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-interface {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chat-interface.hidden {
+            display: none;
+        }
+
+        .phone-header {
+            background: #1c1c1e;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            text-shadow: none;
+        }
+
+        .chat-contact {
+            font-weight: 600;
+            text-shadow: none;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #1c1c1e;
+            min-height: 0;
+        }
+
+        /* Message Bubbles */
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .message.sent {
+            justify-content: flex-end;
+        }
+
+        .message.received {
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 90%;
+            min-width: 120px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 1rem;
+            line-height: 1.4;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message.inbound .message-bubble {
+            background: #E5E5EA;
+            color: black;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message.outbound .message-bubble {
+            background: #007AFF;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.outbound.name-contact .message-bubble {
+            background: #34C759;
+            color: white;
+        }
+
+        .message-contact {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            opacity: 0.8;
+        }
+
+        .message.inbound {
+            justify-content: flex-start;
+        }
+
+        .message.outbound {
+            justify-content: flex-end;
+        }
+
+        .message.pending .message-bubble {
+            opacity: 0.7;
+        }
+
+        .message.pending.inbound .message-bubble {
+            background: #C7C7CC;
+            color: black;
+        }
+
+        .message.pending.outbound .message-bubble {
+            background: #5AC8FA;
+            color: white;
+        }
+
+        .message.pending.outbound.name-contact .message-bubble {
+            background: #A3D977;
+            color: white;
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        /* Input Area */
+        .input-area {
+            background: #1c1c1e;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .message-input {
+            flex: 1;
+            background: #2c2c2e;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 15px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .message-input::placeholder {
+            color: #8e8e93;
+        }
+
+        .send-button {
+            background: #007bff;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .send-button:hover {
+            background: #0056b3;
+        }
+
+        .send-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        /* Welcome State */
+        .welcome-state {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #666;
+            text-align: center;
+        }
+
+        .welcome-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: absolute;
+                z-index: 100;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .phone {
+                max-width: 100%;
+                height: 100%;
+                border-radius: 0;
+                padding: 0;
+            }
+
+            .phone-screen {
+                border-radius: 0;
+            }
+        }
+
+        /* Loading states */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #8e8e93;
+        }
+
+        .error {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #ff453a;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Phase 1: Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="logo">HATCH</div>
+        <div class="spinner"></div>
+        <p style="color: white; margin-top: 1rem;">Loading your messages...</p>
+    </div>
+
+    <!-- Phase 2: Main Application -->
+    <div class="container" id="mainContainer">
+        <!-- Sidebar with conversations -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>Messages</h1>
+            </div>
+            <div class="conversations-list" id="conversationsList">
+                <div class="loading">Loading conversations...</div>
+            </div>
+        </div>
+
+        <!-- Chat area -->
+        <div class="chat-area">
+            <div class="phone-container">
+                <div class="phone">
+                    <div class="phone-screen">
+                        <!-- Welcome state (shown when no conversation selected) -->
+                        <div class="welcome-state" id="welcomeState">
+                            <div class="welcome-icon">💬</div>
+                            <h2>Welcome to Hatch</h2>
+                            <p>Select a conversation to start messaging</p>
+                        </div>
+
+                        <!-- Chat interface (hidden initially) -->
+                        <div class="chat-interface hidden" id="chatInterface">
+                            <div class="phone-header" id="chatHeader">
+                                <div class="chat-contact" id="chatContact">Select a conversation</div>
+                            </div>
+                            <div class="messages-container" id="messagesContainer">
+                                <!-- Messages will be loaded here -->
+                            </div>
+                            <div class="input-area">
+                                <input type="text" class="message-input" id="messageInput" placeholder="Type a message..." disabled>
+                                <button class="send-button" id="sendButton" disabled title="Send message" aria-label="Send message">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentConversationId = null;
+        let conversations = [];
+        let currentMessages = [];
+        let eventSource = null;
+        let lastMessageTimestamp = null;
+
+        // Phase 1: Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                initializeApp();
+            }, 1500); // Show loading screen for 1.5 seconds
+        });
+
+        async function initializeApp() {
+            try {
+                // Load conversations
+                await loadConversations();
+                
+                // Hide loading screen and show main app
+                document.getElementById('loadingScreen').classList.add('hidden');
+                document.getElementById('mainContainer').classList.add('visible');
+                
+                // Set up event listeners
+                setupEventListeners();
+                
+                // Start real-time updates
+                startEventSource();
+                
+            } catch (error) {
+                console.error('Failed to initialize app:', error);
+                showError('Failed to load conversations. Please refresh the page.');
+            }
+        }
+
+        function startEventSource() {
+            // Close existing connection
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            // Create new EventSource connection
+            eventSource = new EventSource('/api/events');
+            
+            eventSource.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    handleRealtimeUpdate(data);
+                } catch (error) {
+                    console.error('Error parsing SSE data:', error);
+                }
+            };
+            
+            eventSource.onerror = function(error) {
+                console.error('SSE connection error:', error);
+                // Reconnect after 5 seconds
+                setTimeout(() => {
+                    if (eventSource.readyState === EventSource.CLOSED) {
+                        startEventSource();
+                    }
+                }, 5000);
+            };
+        }
+
+        function handleRealtimeUpdate(data) {
+            switch (data.type) {
+                case 'connected':
+                    console.log('Connected to real-time updates');
+                    break;
+                    
+                case 'message_update':
+                    if (data.conversation_id === currentConversationId) {
+                        // Reload messages for current conversation
+                        loadMessages(currentConversationId);
+                    }
+                    // Reload conversations to update the list
+                    loadConversations();
+                    break;
+                    
+                case 'keepalive':
+                    // Just ignore keepalive messages
+                    break;
+                    
+                default:
+                    console.log('Unknown SSE message type:', data.type);
+            }
+        }
+
+        // Phase 2: Load conversations from API
+        async function loadConversations() {
+            try {
+                const response = await fetch('/api/conversations');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                conversations = data.conversations || [];
+                renderConversations();
+                
+            } catch (error) {
+                console.error('Error loading conversations:', error);
+                document.getElementById('conversationsList').innerHTML = 
+                    '<div class="error">Failed to load conversations</div>';
+            }
+        }
+
+        function renderConversations() {
+            const container = document.getElementById('conversationsList');
+            
+            if (!conversations || conversations.length === 0) {
+                container.innerHTML = '<div class="error">No conversations found</div>';
+                return;
+            }
+
+            container.innerHTML = conversations.map(conv => {
+                const time = conv.last_message_date 
+                    ? new Date(conv.last_message_date).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })
+                    : 'No date';
+                
+                // Use the participants string directly from PostgreSQL
+                const displayName = conv.participants;
+                const phoneIndicator = conv.has_phone_numbers ? '📱' : '👥';
+                
+                return `
+                    <div class="conversation-item" data-conversation-id="${conv.conversation_id}"
+                         data-participants="${conv.participants}">
+                        <div class="conversation-time">${time}</div>
+                        <div class="conversation-contact">${phoneIndicator} ${displayName}</div>
+                        <div class="conversation-preview">${conv.message_count} messages</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setupEventListeners() {
+            // Conversation selection
+            document.getElementById('conversationsList').addEventListener('click', function(e) {
+                const conversationItem = e.target.closest('.conversation-item');
+                if (conversationItem) {
+                    selectConversation(conversationItem.dataset.conversationId);
+                }
+            });
+
+            // Send message
+            document.getElementById('sendButton').addEventListener('click', sendMessage);
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        }
+
+        async function selectConversation(conversationId) {
+            // Update UI to show selected conversation
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-conversation-id="${conversationId}"]`).classList.add('active');
+
+            currentConversationId = conversationId;
+            
+            // Find conversation details
+            const conversation = conversations.find(c => c.conversation_id === conversationId);
+            if (conversation) {
+                const displayName = conversation.participants;
+                document.getElementById('chatContact').textContent = displayName;
+            }
+
+            // Show chat interface and hide welcome state
+            document.getElementById('welcomeState').style.display = 'none';
+            document.getElementById('chatInterface').classList.remove('hidden');
+            
+            // Enable input
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendButton').disabled = false;
+
+            // Load messages for this conversation
+            await loadMessages(conversationId);
+            
+            // Real-time updates will handle new messages via SSE
+        }
+
+        async function loadMessages(conversationId) {
+            console.log('Loading messages for conversation:', conversationId);
+            try {
+                const response = await fetch(`/api/conversation/${conversationId}/messages`);
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Received data:', data);
+                currentMessages = data.messages || [];
+                console.log('Current messages count:', currentMessages.length);
+                renderMessages();
+                
+                // Update last message timestamp for real-time updates
+                if (currentMessages.length > 0) {
+                    lastMessageTimestamp = currentMessages[currentMessages.length - 1].timestamp;
+                }
+                
+            } catch (error) {
+                console.error('Error loading messages:', error);
+                document.getElementById('messagesContainer').innerHTML = 
+                    '<div class="error">Failed to load messages</div>';
+            }
+        }
+
+        function renderMessages() {
+            console.log('renderMessages called, currentMessages:', currentMessages);
+            const container = document.getElementById('messagesContainer');
+            console.log('Container found:', !!container);
+            
+            if (!currentMessages || currentMessages.length === 0) {
+                container.innerHTML = '<div class="loading">No messages yet</div>';
+                return;
+            }
+
+            // Find the conversation to determine contact type
+            const conversation = conversations.find(c => c.conversation_id === currentConversationId);
+            if (!conversation) {
+                console.log('Conversation not found for ID:', currentConversationId);
+                return;
+            }
+
+            // Check if contacts are phone numbers
+            const hasPhoneNumbers = conversation.has_phone_numbers;
+
+            console.log('Rendering messages:', currentMessages.length, 'messages');
+            console.log('First message:', currentMessages[0]);
+
+            container.innerHTML = currentMessages.map(message => {
+                // Use the direction field from the database, normalize to outbound/inbound
+                let messageClass = message.direction || 'outbound';
+                if (messageClass.startsWith('outbound')) {
+                    messageClass = 'outbound';
+                } else if (messageClass.startsWith('inbound')) {
+                    messageClass = 'inbound';
+                }
+                
+                const contactTypeClass = hasPhoneNumbers ? 'phone-contact' : 'name-contact';
+                
+                const deliveryClass = message.is_delivered ? '' : 'pending';
+                const time = new Date(message.timestamp).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                console.log(`Message: ${messageClass} ${contactTypeClass} ${deliveryClass}`);
+
+                return `
+                    <div class="message ${messageClass} ${contactTypeClass} ${deliveryClass}">
+                        <div class="message-bubble">
+                            <div class="message-contact">${escapeHtml(message.from_contact)}</div>
+                            ${escapeHtml(message.body)}
+                            <div class="message-time">${time}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            
+            if (!content || !currentConversationId) return;
+
+            // Find the conversation to get recipient info
+            const conversation = conversations.find(c => c.conversation_id === currentConversationId);
+            if (!conversation) return;
+
+            try {
+                // Disable input while sending
+                input.disabled = true;
+                document.getElementById('sendButton').disabled = true;
+
+                // For simplicity, let's assume we're sending to the first participant in the string
+                // Split the participants string to get individual contacts
+                const participantsList = conversation.participants.split(', ');
+                const recipientContact = participantsList[0];
+
+                const response = await fetch('/api/send_message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        conversation_id: currentConversationId,
+                        to: recipientContact,
+                        content: content
+                    })
+                });
+
+                if (response.ok) {
+                    // Clear input
+                    input.value = '';
+                    
+                    // Add message to UI immediately (optimistic update)
+                    // For simplicity, assume we're the second participant sending to the first
+                    const participantsList = conversation.participants.split(', ');
+                    const senderContact = participantsList[1] || participantsList[0];
+                    const newMessage = {
+                        body: content,
+                        from_contact: senderContact,
+                        to_contact: recipientContact,
+                        direction: 'outbound',
+                        is_delivered: false,
+                        timestamp: new Date().toISOString()
+                    };
+                    currentMessages.push(newMessage);
+                    renderMessages();
+                    
+                    // Update conversation list
+                    updateConversationPreview(currentConversationId, content);
+                    
+                    // Real-time updates will handle message delivery status via SSE
+                    
+                } else {
+                    throw new Error('Failed to send message');
+                }
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Failed to send message. Please try again.');
+            } finally {
+                // Re-enable input
+                input.disabled = false;
+                document.getElementById('sendButton').disabled = false;
+                input.focus();
+            }
+        }
+
+        function updateConversationPreview(conversationId, lastMessage) {
+            const conversationItem = document.querySelector(`[data-conversation-id="${conversationId}"]`);
+            if (conversationItem) {
+                const preview = conversationItem.querySelector('.conversation-preview');
+                const time = conversationItem.querySelector('.conversation-time');
+                
+                if (preview) preview.textContent = lastMessage;
+                if (time) time.textContent = new Date().toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function showError(message) {
+            document.getElementById('conversationsList').innerHTML = 
+                `<div class="error">${message}</div>`;
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (eventSource) {
+                eventSource.close();
+            }
+        });
+    </script>
+</body>
+</html>

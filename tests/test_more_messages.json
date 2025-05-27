@@ -1,0 +1,14 @@
+[
+    { "from_": "Alice", "to": "Dave", "message": "Hey Dave, are you free this weekend?" , "direction": "outbound-api", "status":"delivered"},
+    { "from_": "Dave", "to": "Alice", "message": "Hi Alice! Yes, I'm free. What do you have in mind?" , "direction": "inbound-api", "status":"received"},
+    { "from_": "Alice", "to": "Dave", "message": "I was thinking we could go hiking." , "direction": "outbound-api", "status":"delivered"},
+    { "from_": "Dave", "to": "Alice", "message": "That sounds great! I love hiking." , "direction": "inbound-api", "status":"received"},
+    { "from_": "Alice", "to": "Dave", "message": "Awesome! Do you have a place in mind?" , "direction": "outbound-api", "status":"delivered"},
+    { "from_": "Dave", "to": "Alice", "message": "How about the Blue Ridge Mountains?" , "direction": "inbound-api", 	"status":"received"},
+    { "from_": "Alice", "to": "Dave", "message": "Perfect choice! Let's plan for Saturday morning." , 	"direction": 	"outbound-api","status":"delivered"},
+    { "from_": "Dave", "to": "Alice", 	"message": 	"Saturday morning works for me. What time?", 	"direction": 	"inbound-api","status":"received"},
+    { 	"from_": 	"Alice", 	"to": 	"Dave", 	"message": 	"How about 8 AM?", 	"direction": 	"outbound-api","status":"pending"},
+    { 	"from_": 	"Alice", 	"to": 	"Dave", 	"message": 	"How about 8 AM?", 	"direction": 	"outbound-api","status":"delivered"},
+    { 	"from_": 	"Dave", 	"to": 	"Alice", 	"message": 	"8 AM is perfect. Looking forward to it!", 	"direction": 	"inbound-api","status":"received"},
+    { 	"from_": 	"Alice", 	"to": 	"Dave", 	"message": 	"Me too! I'll bring some snacks.", 	"direction": 	"outbound-api","status":"delivered"}
+]

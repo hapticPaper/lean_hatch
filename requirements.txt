@@ -1,0 +1,6 @@
+rich
+structlog
+pydantic
+requests
+sqlalchemy
+twilio

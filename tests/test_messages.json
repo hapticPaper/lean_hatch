@@ -1,0 +1,13 @@
+[
+    { "from_": "Alice", "to": "Bob", "message": "Hello Bob!" , "direction": "outbound-api", "status":"delivered"},
+    { "from_": "Bob", "to": "Alice", "message": "Hi Alice! How are you?" , "direction": "inbound-api", "status":"received"},
+    { "from_": "Alice", "to": "Bob", "message": "I'm good, thanks! And you?" , "direction": "outbound-api", "status":"delivered"},
+    { "from_": "Bob", "to": "Alice", "message": "Doing well, thanks for asking!" , "direction": "inbound-api", "status":"received"},
+    { "from_": "Alice", "to": "Bob", "message": "Great to hear! Let's catch up soon." , "direction": "outbound-api", "status":"delivered"},
+    { "from_": "Bob", "to": "Alice", "message": "Sure, that sounds good!" , "direction": "inbound-api", 	"status":"received"},
+    { "from_": "Alice", "to": "Bob", 	"message": 	"How about this weekend?", 	"direction": 	"outbound-api","status":"delivered"},
+    { 	"from_": 	"Bob", 	"to": 	"Alice", 	"message": 	"This weekend works for me.", 	"direction": 	"inbound-api","status":"received"},
+    { 	"from_": 	"Alice", 	"to": 	"Bob", 	"message": 	"Perfect! Let's finalize the details later.", 	"direction": 	"outbound-api","status":"delivered"},
+    { 	"from_": 	"Bob", 	"to": 	"Alice", 	"message": 	"Sounds good! Looking forward to it.", 	"direction": 	"inbound-api","status":"received"},
+    { 	"from_": 	"Alice", 	"to": 	"Bob", 	"message": 	"Me too! I'll text you later.", 	"direction": 	"outbound-api","status":"delivered"}
+]
