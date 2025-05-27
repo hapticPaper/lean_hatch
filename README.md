@@ -161,6 +161,274 @@ twilioSMS ────► APIMessageHandler ────► PostgreSQL
 }
 ```
 
+## 🐳 Docker Deployment
+
+### Quick Start with Docker Compose
+
+The application includes a complete Docker Compose setup for easy deployment:
+
+```bash
+# Clone the repository
+git clone <repository>
+cd lean_hatch
+
+# Setup environment variables
+cp .env.example .env
+# Edit .env with your configuration
+
+# Setup secrets
+mkdir -p .secrets
+echo "your_postgres_password" > .secrets/POSTGRES_PASSWORD
+echo "your_mongo_password" > .secrets/MONGO_PASSWORD
+echo "your_twilio_token" > .secrets/TWILIO_AUTH_TOKEN
+
+# Start the application
+docker-compose up -d
+```
+
+### Docker Services
+
+The `docker-compose.yaml` includes the following services:
+
+#### **PostgreSQL Database**
+```yaml
+services:
+  db:
+    image: postgres:15
+    container_name: hatchapp_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    secrets:
+      - pg_password
+```
+
+- **Purpose**: Primary data store for messages and conversations
+- **Version**: PostgreSQL 15
+- **Persistence**: Data stored in `pgdata` volume
+- **Security**: Password loaded from Docker secret
+
+#### **Available Extensions** (Commented out, enable as needed):
+- **MongoDB**: Alternative NoSQL storage option
+- **InfluxDB**: Time-series data and analytics
+- **Nginx**: Reverse proxy and load balancing
+- **Mongo Express**: MongoDB web UI
+
+### Environment Configuration
+
+#### **Required Environment Variables** (`.env`):
+```bash
+# PostgreSQL
+POSTGRES_USER=hatchuser
+POSTGRES_DB=hatchapp
+
+# Application
+FLASK_ENV=production
+FLASK_PORT=5002
+
+# Optional services
+MONGO_USER=hatchuser
+INFLUXDB_USER=hatchuser
+INFLUXDB_ORGANIZATION=hatch
+INFLUXDB_BUCKET=messages
+```
+
+#### **Required Secrets** (`.secrets/` directory):
+```bash
+.secrets/
+├── POSTGRES_PASSWORD      # PostgreSQL password
+├── MONGO_PASSWORD         # MongoDB password (if enabled)
+├── INFLUX_TOKEN          # InfluxDB token (if enabled)
+├── INFLUXDB_PASSWORD     # InfluxDB password (if enabled)
+└── TWILIO_AUTH_TOKEN     # Twilio authentication token
+```
+
+### Docker Network
+
+All services run on the `hatch-network` bridge network, allowing:
+- **Internal communication** between services
+- **Service discovery** by container name
+- **Isolated networking** from other Docker applications
+
+### Production Deployment
+
+#### **1. Application Dockerfile** (Create if needed):
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Expose port
+EXPOSE 5002
+
+# Run application
+CMD ["python", "api/api.py"]
+```
+
+#### **2. Update docker-compose.yaml** to include the app:
+```yaml
+services:
+  app:
+    build: .
+    container_name: hatchapp_flask
+    restart: always
+    ports:
+      - "5002:5002"
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+    env_file:
+      - .env
+    secrets:
+      - twilio_auth_token
+    depends_on:
+      - db
+    networks:
+      - hatch-network
+```
+
+#### **3. Database Initialization**:
+```bash
+# After starting containers, initialize the database
+docker-compose exec app python -c "
+from db.postgres_connector import hatchPostgres
+pg = hatchPostgres()
+pg.create_tables()
+"
+
+# Apply real-time triggers
+docker-compose exec db psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /app/sql/realtime_triggers.sql
+```
+
+### Development with Docker
+
+#### **Local Development Override**:
+Create `docker-compose.override.yml`:
+```yaml
+services:
+  app:
+    volumes:
+      - .:/app
+    environment:
+      FLASK_ENV: development
+      FLASK_DEBUG: "1"
+    command: ["python", "api/api.py"]
+  
+  db:
+    ports:
+      - "5433:5432"  # Use different port to avoid conflicts
+```
+
+#### **Development Workflow**:
+```bash
+# Start development environment
+docker-compose -f docker-compose.yaml -f docker-compose.override.yml up
+
+# View logs
+docker-compose logs -f app
+
+# Execute commands in container
+docker-compose exec app python sample.py
+
+# Restart specific service
+docker-compose restart app
+```
+
+### Monitoring and Troubleshooting
+
+#### **Health Checks**:
+```bash
+# Check service status
+docker-compose ps
+
+# View application logs
+docker-compose logs app
+
+# Check database connectivity
+docker-compose exec app python -c "
+from db.postgres_connector import hatchPostgres
+pg = hatchPostgres()
+print('Database connection:', pg.test_connection())
+"
+```
+
+#### **Common Issues**:
+
+1. **Database Connection Refused**:
+   ```bash
+   # Check if PostgreSQL is running
+   docker-compose ps db
+   
+   # Check environment variables
+   docker-compose exec app env | grep POSTGRES
+   ```
+
+2. **Real-time Updates Not Working**:
+   ```bash
+   # Verify triggers are installed
+   docker-compose exec db psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "
+   SELECT trigger_name FROM information_schema.triggers 
+   WHERE trigger_name = 'messages_notify_trigger';
+   "
+   ```
+
+3. **Application Won't Start**:
+   ```bash
+   # Check application logs
+   docker-compose logs app
+   
+   # Restart with fresh build
+   docker-compose down
+   docker-compose build --no-cache
+   docker-compose up
+   ```
+
+### Scaling and Production Considerations
+
+#### **Horizontal Scaling**:
+```yaml
+services:
+  app:
+    deploy:
+      replicas: 3
+    ports:
+      - "5002-5004:5002"  # Multiple port mappings
+```
+
+#### **Load Balancing with Nginx**:
+Enable the nginx service and configure upstream servers:
+```nginx
+upstream hatch_app {
+    server app_1:5002;
+    server app_2:5002;
+    server app_3:5002;
+}
+```
+
+#### **Production Security**:
+- Use Docker secrets for all sensitive data
+- Enable SSL/TLS termination at nginx
+- Implement rate limiting
+- Use non-root user in Dockerfile
+- Regularly update base images
+
 ## 🔧 Configuration
 
 ### Environment Variables

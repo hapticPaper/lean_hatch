@@ -3,3 +3,7 @@
 .secrets/*
 */__pycache__/*
 .env
+.DS_Store
+/pgdata/
+/.secrets/
+/tests/t_test.py
