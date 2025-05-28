@@ -470,13 +470,6 @@ Content-Type: application/json
 
 ### Email Templates
 
-The system uses email-client-compatible HTML templates:
-
-**Template Features:**
-- **Client Compatibility**: Works across major email clients
-- **No Animations**: Animations removed to prevent stripping
-- **Responsive Design**: Mobile-friendly layout
-- **Professional Styling**: Clean, modern appearance
 
 **Template Location**: `tests/html_email_compatible.html`
 
@@ -1118,38 +1111,15 @@ The application maintains clear separation between messaging and email functiona
 
 ### Email Client Compatibility
 
-**Template Design:**
-- Removed CSS animations (often stripped by email clients)
-- Table-based layouts for maximum compatibility
-- Inline CSS for consistent rendering
-- Mobile-responsive design patterns
-
-**Supported Clients:**
-- Gmail, Outlook, Yahoo Mail
-- Apple Mail, Thunderbird
-- Mobile email clients (iOS, Android)
-
-### Email Modal Features
-
-**User Experience:**
-- Clean modal overlay design
-- Real-time form validation
-- Visual success/error feedback
-- Countdown timer with progress bar
-- Automatic modal closure after success
-
 **Technical Implementation:**
 - Event-driven JavaScript
 - Fetch API for form submission
-- CSS animations for countdown
-- Error handling with user feedback
 
 ### SendGrid Integration Notes
 
 **API Usage:**
 - SendGrid API v3 for email delivery
 - Content object structure for HTML emails
-- Template injection for dynamic content
 - Response tracking and error handling
 
 **Database Storage:**
