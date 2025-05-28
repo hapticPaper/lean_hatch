@@ -348,7 +348,7 @@ Email Modal ────► Flask API ────► SendGrid Connector ──�
       to: str = Field(regex=r'^\+\d{10,15}$')
       from_: str = Field(alias='from', regex=r'^\+\d{10,15}$')
       body: str = Field(max_length=1600)
-  ```
+  
       from_contact: str
       body: str
       conversation_id: UUID4  # Auto-generated from participants
