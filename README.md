@@ -88,12 +88,12 @@ chmod +x setup.sh
 ```
 
 **✨ The setup script is a complete solution that:**
-- 🎯 **Detects your system** and guides you through optimal configuration choices
-- 🔧 **Handles all dependencies** including Python environments, Docker, and packages
-- 🔐 **Manages secrets securely** with file-based encryption and proper permissions
-- 🗄️ **Sets up databases** with automatic table creation and real-time triggers
-- 🚀 **Starts your application** and opens it in your browser automatically
-- 🧪 **Tests everything** to ensure your installation works correctly
+-  **Detects your system** and guides you through optimal configuration choices
+-  **Handles all dependencies** including Python environments, Docker, and packages
+-  **Manages secrets securely** with file-based encryption and proper permissions
+-  **Sets up databases** with automatic table creation and real-time triggers
+-  **Starts your application** and opens it in your browser automatically
+-  **Tests everything** to ensure your installation works correctly
 
 #### 🎯 What the Setup Script Does
 
@@ -111,17 +111,17 @@ The setup script provides a **complete guided installation** with the following 
   - Direct installation to system Python for quick testing
 
 **2. Smart Prerequisite Checking:**
-- ✅ **Python 3.11+** installation verification
-- ✅ **Docker and Docker Compose** availability testing
-- ✅ **Virtual environment modules** (venv/conda) validation
-- 📚 **Helpful installation guides** for missing dependencies with direct links
-- 🔍 **Platform detection** (macOS, Linux, Windows Git Bash support)
+- **Python 3.11+** installation verification
+- **Docker and Docker Compose** availability testing
+- **Virtual environment modules** (venv/conda) validation
+- **Helpful installation guides** for missing dependencies with direct links
+- **Platform detection** (macOS, Linux, Windows Git Bash support)
 
 **3. Intelligent Python Environment Management:**
-- 🐍 **Conda**: Lists existing environments, option to reuse or create new
-- 🐍 **venv**: Creates isolated virtual environment with custom name
-- 📦 **Dependencies**: Automatically installs all required Python packages from `requirements.txt`
-- 🔄 **Activation guidance**: Clear instructions for future sessions
+-  **Conda**: Lists existing environments, option to reuse or create new
+-  **venv**: Creates isolated virtual environment with custom name
+-  **Dependencies**: Automatically installs all required Python packages from `requirements.txt`
+-  **Activation guidance**: Clear instructions for future sessions
 
 **4. Interactive Configuration with Smart Defaults:**
 - 🔧 **PostgreSQL**: Database credentials and connection settings
@@ -248,24 +248,24 @@ Happy messaging! 🚀
 ```
 
 **Key Interactive Features:**
-- 🎨 **Colored Output**: Green for success, yellow for warnings, red for errors, blue for steps
-- 🔄 **Smart Defaults**: Sensible defaults in brackets, just press Enter to accept
-- 🔐 **Secure Input**: Password and token input is hidden from terminal display
-- 📋 **Existing Config Detection**: Automatically detects and offers to reuse existing configurations
-- ❓ **Yes/No Prompts**: Clear (Y/n) prompts with default selections
-- 🆔 **Process Tracking**: Shows server PID for easy management
-- 🌐 **Cross-Platform Browser Opening**: Works on macOS, Linux, and Windows Git Bash
+- **Colored Output**: Green for success, yellow for warnings, red for errors, blue for steps
+- **Smart Defaults**: Sensible defaults in brackets, just press Enter to accept
+- **Secure Input**: Password and token input is hidden from terminal display
+- **Existing Config Detection**: Automatically detects and offers to reuse existing configurations
+- **Yes/No Prompts**: Clear (Y/n) prompts with default selections
+- *Process Tracking**: Shows server PID for easy management
+- **Cross-Platform Browser Opening**: Works on macOS, Linux, and Windows Git Bash
 
 
 ### 🔄 After Setup Completion
 
 Once the setup script completes, you'll have:
 
-1. **✅ Working Application**: Running at `http://localhost:5002`
-2. **✅ Database**: PostgreSQL with tables and triggers
-3. **✅ Dependencies**: All Python packages installed in virtual environment
-4. **✅ Configuration**: Environment variables and secrets properly set
-5. **✅ Real-time Features**: Live message updates enabled
+1. ** Working Application**: Running at `http://localhost:5002`
+2. ** Database**: PostgreSQL with tables and triggers
+3. ** Dependencies**: All Python packages installed in virtual environment
+4. ** Configuration**: Environment variables and secrets properly set
+5. ** Real-time Features**: Live message updates enabled
 
 #### 📱 Using the Application
 
@@ -509,7 +509,6 @@ Content-Type: application/json
 - **Separate Table**: Emails stored in dedicated `emails` table
 - **Provider Data**: SendGrid message IDs and responses saved
 - **Metadata**: CC, BCC, reply-to, attachments support
-- **Status Tracking**: Send status and timestamp recording
 
 ## 🐳 Docker Deployment
 
@@ -626,7 +625,7 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # Expose port
-EXPOSE 5002
+EXPOSE 5000
 
 # Run application
 CMD ["python", "api/api.py"]
@@ -640,7 +639,7 @@ services:
     container_name: hatchapp_flask
     restart: always
     ports:
-      - "5002:5002"
+      - "5000:5000"
     environment:
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
@@ -913,44 +912,13 @@ python3 api.py
 ```
 
 ### Usage
-1. **Access web interface**: http://localhost:5002
+1. **Access web interface**: http://localhost:5000
 2. **View conversations**: Automatically loads from database
 3. **Send messages**: 
    - Phone numbers → Twilio SMS
    - Names → Database only
 4. **Send emails**: Click "Compose Email" button for modal popup
 5. **Real-time updates**: Messages appear instantly (emails stored separately)
-
-## 🔍 Development Guide
-
-### Adding New Features
-
-#### 1. **New Message Types**
-1. Add to `MessageType` enum in `application_model.py`
-2. Update database schema in `database_model.py`
-3. Add handler logic in `api_message_handler.py`
-4. Update frontend rendering in `index.html`
-
-#### 2. **New Email Features**
-1. Update `EmailMessage` model in `application_model.py`
-2. Modify `dbEmail` table in `database_model.py`
-3. Add processing logic in `sendgrid_email_connector.py`
-4. Update email templates in `tests/` directory
-5. Modify email composer modal in `index.html`
-
-#### 2. **New API Endpoints**
-1. Add route in `api.py`
-2. Follow existing patterns for database session management
-3. Use structured logging with `logger_instance`
-4. Return consistent JSON format
-5. For email endpoints, integrate with SendGrid connector
-
-#### 3. **Database Changes**
-1. Update SQLAlchemy models in `database_model.py`
-2. Create migration script (manual for now)
-3. Update Pydantic models if needed
-4. Test with existing data
-5. For emails: Use separate `emails` table, not `messages`
 
 ### Debugging
 
@@ -1048,18 +1016,6 @@ python3 tests/test_email_system.py
 - **Input Validation**: Pydantic models validate all inputs
 - **CORS**: Currently permissive for development
 
-## 🤝 Contributing
-
-### Code Style
-- **Python**: Follow PEP 8
-- **Imports**: Absolute imports, grouped by type
-- **Logging**: Use structured logging with context
-- **Comments**: Document complex business logic
-
-### Git Workflow
-- **Feature branches**: `feature/description`
-- **Commit messages**: Descriptive and focused
-- **Pull requests**: Include tests and documentation updates
 
 ## 📚 Dependencies
 
@@ -1072,22 +1028,6 @@ python3 tests/test_email_system.py
 - **SendGrid**: Email service integration
 - **Rich**: Enhanced logging and formatting
 
-### Development Dependencies
-- **pytest**: Testing framework
-- **black**: Code formatting
-- **mypy**: Type checking
-
-## 🔄 Migration Guide
-
-### From Polling to Real-time
-- ✅ **Completed**: Removed all polling logic
-- ✅ **Completed**: Implemented SSE with PostgreSQL LISTEN/NOTIFY
-- ✅ **Completed**: Frontend uses EventSource for real-time updates
-
-### From Pydantic V1 to V2
-- ✅ **Completed**: Migrated `@validator` to `@field_validator`
-- ✅ **Completed**: Updated `Config` classes to `model_config`
-- ✅ **Completed**: Removed deprecated field configurations
 
 ---
 
