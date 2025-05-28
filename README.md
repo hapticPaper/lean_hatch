@@ -372,8 +372,8 @@ POSTGRES_USER=hatchuser
 POSTGRES_DB=hatchapp
 
 # Application
-FLASK_ENV=production
-FLASK_PORT=5002
+FLASK_ENV=development
+FLASK_PORT=5000
 
 # Optional services
 MONGO_USER=hatchuser
@@ -625,34 +625,267 @@ SENDGRID_FROM_EMAIL=your_verified_sender@example.com
 
 ## 🚀 Getting Started
 
-### Quick Setup with Setup Script (Recommended)
+### ⚡ Quick Setup with Automated Setup Script (Recommended)
 
-The easiest way to get started is using our automated setup script:
+The **easiest and fastest** way to get started is using our comprehensive automated setup script. The script handles everything from dependency checking to application startup with **zero manual configuration required**:
 
 ```bash
 # Clone the repository
 git clone <repository>
 cd lean_hatch
 
-# Run the setup script
+# Make the setup script executable (if needed)
+chmod +x setup.sh
+
+# Run the automated setup script
 ./setup.sh
 ```
 
-The setup script will:
-1. **Check prerequisites** (Python 3, Docker, Docker Compose)
-2. **Prompt for configuration** (database, Twilio, SendGrid credentials)
-3. **Create .env and .secrets files** automatically
-4. **Install Python dependencies**
-5. **Start PostgreSQL database** (optional)
-6. **Create database tables and triggers**
-7. **Start the application server** (optional)
-8. **Open the web interface** in your browser (optional)
+**✨ The setup script is a complete solution that:**
+- 🎯 **Detects your system** and guides you through optimal configuration choices
+- 🔧 **Handles all dependencies** including Python environments, Docker, and packages
+- 🔐 **Manages secrets securely** with file-based encryption and proper permissions
+- 🗄️ **Sets up databases** with automatic table creation and real-time triggers
+- 🚀 **Starts your application** and opens it in your browser automatically
+- 🧪 **Tests everything** to ensure your installation works correctly
 
-The script is interactive and will guide you through each step with helpful prompts and default values.
+#### 🎯 What the Setup Script Does
 
-### Manual Setup
+The setup script provides a **complete guided installation** with the following features:
 
-If you prefer to set up manually:
+**1. Environment Setup Options:**
+- **🐍 Conda Virtual Environment** (Recommended for data science workflows)
+  - Lists existing environments and allows reuse
+  - Creates new environments with Python 3.11+
+  - Automatic activation and dependency management
+- **🐍 Python venv Virtual Environment** (Lightweight, built-in)
+  - Creates isolated virtual environments with custom names
+  - Built-in Python module, no additional installation required
+- **⚠️ Host Python Installation** (Not recommended, but available)
+  - Direct installation to system Python for quick testing
+
+**2. Smart Prerequisite Checking:**
+- ✅ **Python 3.11+** installation verification
+- ✅ **Docker and Docker Compose** availability testing
+- ✅ **Virtual environment modules** (venv/conda) validation
+- 📚 **Helpful installation guides** for missing dependencies with direct links
+- 🔍 **Platform detection** (macOS, Linux, Windows Git Bash support)
+
+**3. Intelligent Python Environment Management:**
+- 🐍 **Conda**: Lists existing environments, option to reuse or create new
+- 🐍 **venv**: Creates isolated virtual environment with custom name
+- 📦 **Dependencies**: Automatically installs all required Python packages from `requirements.txt`
+- 🔄 **Activation guidance**: Clear instructions for future sessions
+
+**4. Interactive Configuration with Smart Defaults:**
+- 🔧 **PostgreSQL**: Database credentials and connection settings
+  - Default user: `hatchuser`, database: `hatchapp`
+  - Secure password prompting with hidden input
+  - Existing configuration detection and preservation
+- 📱 **Twilio SMS**: Account SID, Auth Token, and phone number
+  - Direct links to Twilio Console for easy credential retrieval
+  - Secure token storage with masked display
+- 📧 **SendGrid Email**: API key and verified sender email
+  - Direct links to SendGrid API key management
+  - Validation prompts for required fields
+- 🔐 **Secrets Management**: Automatically creates `.env` and `.secrets/` files
+  - Proper file permissions (600) for security
+  - Smart credential update handling (keeps existing vs. updates)
+
+**5. Comprehensive Database Setup:**
+- 🗄️ **Docker Compose**: Optional PostgreSQL container startup
+- 📊 **Schema Creation**: Automatic table creation for messages and emails
+- ⚡ **Real-time Triggers**: PostgreSQL triggers for live updates via LISTEN/NOTIFY
+- 🧪 **Connection Testing**: Verifies database connectivity and table creation
+- 🔄 **Migration Support**: Handles existing databases gracefully
+
+**6. Complete Application Startup:**
+- 🚀 **Flask Server**: Optional automatic server startup in background
+- 🌐 **Browser Launch**: Cross-platform browser opening (macOS/Linux/Windows)
+- 📝 **Usage Instructions**: Clear next steps and usage guidance
+- 🎛️ **Process Management**: Server PID tracking for easy shutdown
+
+#### 🎮 Interactive Setup Experience
+
+The script provides a **user-friendly interactive experience** with colored output and helpful guidance:
+
+```bash
+╔═══════════════════════════════════════════════════════════════╗
+║                    🚀 HATCH SETUP SCRIPT 🚀                   ║
+║                                                               ║
+║        Welcome to the Hatch messaging platform setup!        ║
+║        This script will guide you through configuration       ║
+╚═══════════════════════════════════════════════════════════════╝
+
+[STEP] Python Environment Setup
+
+Choose your Python environment setup:
+1. Conda Virtual Environment (Full-featured)
+2. Python venv Virtual Environment (Lightweight)  
+3. Host Python Installation (Not Recommended)
+
+💡 Virtual environments (options 1 & 2) isolate dependencies and prevent conflicts.
+
+Select option (1, 2, or 3): 2
+[SUCCESS] Selected: Python venv Virtual Environment
+
+[STEP] Checking prerequisites...
+[SUCCESS] All prerequisites found!
+
+[STEP] Setting up Python venv virtual environment...
+Name for venv directory [hatch-venv]: 
+[SUCCESS] Python venv created: hatch-venv
+[SUCCESS] Virtual environment activated
+
+[WARNING] Remember to activate the venv in future sessions:
+source hatch-venv/bin/activate
+
+[STEP] Configuring environment variables...
+
+PostgreSQL Database Configuration:
+PostgreSQL username [hatchuser]: 
+PostgreSQL database name [hatchapp]: 
+PostgreSQL password (will be stored securely): ********
+
+Flask Application Configuration:
+Flask environment (development/production) [development]: 
+Flask port [5002]: 
+
+Twilio SMS Configuration:
+You can get these from your Twilio Console: https://console.twilio.com/
+Twilio Account SID: AC1234567890abcdef1234567890abcdef
+Twilio Auth Token: ********************************
+Twilio Phone Number (with +): +1234567890
+
+SendGrid Email Configuration:
+You can get your API key from: https://app.sendgrid.com/settings/api_keys
+SendGrid API Key: ****************************************
+SendGrid verified sender email: your-email@domain.com
+
+[SUCCESS] .env file created
+[SUCCESS] Secrets files processed
+[SUCCESS] Secrets file permissions set
+
+[STEP] Installing Python dependencies...
+[SUCCESS] Python dependencies installed
+
+Do you want to start the PostgreSQL database container? (Y/n): y
+[STEP] Starting PostgreSQL database container...
+[STEP] Waiting for database to be ready...
+[STEP] Creating database tables and testing connection...
+[SUCCESS] Database tables created and connection verified
+[STEP] Applying real-time triggers...
+[SUCCESS] Real-time triggers applied
+[SUCCESS] Database setup complete
+
+Do you want to start the Python server? (Y/n): y
+[STEP] Starting Hatch application...
+[SUCCESS] Hatch server started successfully (PID: 12345)
+
+Do you want to open the web interface? (Y/n): y
+[SUCCESS] Web interface should open in your browser
+
+🎉 Setup complete! 🎉
+
+Your Hatch application is now running!
+
+📱 Web Interface: http://localhost:5002
+📧 Email composer: Click 'Compose Email' in the sidebar
+💬 Real-time messaging: Send messages to see live updates
+
+🐍 Python venv: 'hatch-venv' (activate with 'source hatch-venv/bin/activate')
+
+To stop the server, press Ctrl+C or run: kill 12345
+To stop the database: docker-compose down
+
+Happy messaging! 🚀
+```
+
+**Key Interactive Features:**
+- 🎨 **Colored Output**: Green for success, yellow for warnings, red for errors, blue for steps
+- 🔄 **Smart Defaults**: Sensible defaults in brackets, just press Enter to accept
+- 🔐 **Secure Input**: Password and token input is hidden from terminal display
+- 📋 **Existing Config Detection**: Automatically detects and offers to reuse existing configurations
+- ❓ **Yes/No Prompts**: Clear (Y/n) prompts with default selections
+- 🆔 **Process Tracking**: Shows server PID for easy management
+- 🌐 **Cross-Platform Browser Opening**: Works on macOS, Linux, and Windows Git Bash
+
+#### 🔧 Configuration Options
+
+The setup script intelligently handles configuration:
+
+**Smart Defaults:**
+- Database: `localhost:5432` with user `hatchuser`
+- Application: `localhost:5002` with development mode
+- Secrets: Secure file-based storage in `.secrets/` directory
+
+**Optional Services:**
+- Docker PostgreSQL container (if you don't have PostgreSQL installed)
+- Automatic browser opening
+- Development vs. production mode selection
+
+**Credential Validation:**
+- Tests database connections
+- Validates Twilio credentials
+- Verifies SendGrid API key
+
+#### 🛠️ Troubleshooting Setup Issues
+
+If you encounter issues with the setup script:
+
+```bash
+# Make sure the script is executable
+chmod +x setup.sh
+
+# Run with bash explicitly if needed
+bash setup.sh
+
+# Check prerequisites manually
+python3 --version    # Should be 3.11+
+docker --version     # Should be 20.0+
+docker-compose --version  # Should be 1.25+
+
+# For conda users, ensure conda is in PATH
+conda --version
+
+# For venv users, ensure python3-venv is installed
+python3 -c "import venv"  # Should not error
+```
+
+**Common Solutions:**
+- **Permission Denied**: `chmod +x setup.sh`
+- **Python Not Found**: Install Python 3.11+ or update PATH
+- **Docker Issues**: Start Docker Desktop or Docker daemon
+- **Virtual Environment Issues**: Install `python3-venv` package
+- **Network Issues**: Check firewall settings for Docker
+
+### 🔄 After Setup Completion
+
+Once the setup script completes, you'll have:
+
+1. **✅ Working Application**: Running at `http://localhost:5002`
+2. **✅ Database**: PostgreSQL with tables and triggers
+3. **✅ Dependencies**: All Python packages installed in virtual environment
+4. **✅ Configuration**: Environment variables and secrets properly set
+5. **✅ Real-time Features**: Live message updates enabled
+
+#### 📱 Using the Application
+
+**Web Interface**: `http://localhost:5002`
+- View message conversations
+- Send SMS messages (via Twilio)
+- Send emails (via SendGrid)
+- Real-time message updates
+- Modern, responsive design
+
+**API Endpoints**: `http://localhost:5002/api/`
+- RESTful API for all messaging functions
+- Server-Sent Events for real-time updates
+- JSON responses for easy integration
+
+### 🛠️ Manual Setup (Advanced Users)
+
+If you prefer manual setup or need custom configuration:
 
 ### Manual Setup
 

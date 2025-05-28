@@ -27,6 +27,9 @@ dotenv_secrets = os.path.join(os.path.dirname(__file__), '..', '.secrets', '.sec
 dotenv.load_dotenv(dotenv_secrets, override=True)
 
 
+FLASK_HOST = os.getenv('FLASK_HOST', '0.0.0.0')
+FLASK_PORT = int(os.getenv('FLASK_PORT', 5000))
+
 
 app = flask.Flask(__name__)
 
@@ -370,4 +373,4 @@ def send_email():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5002, debug=True)
+    app.run(host=FLASK_HOST, port=FLASK_PORT, debug=True)
