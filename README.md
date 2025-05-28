@@ -261,11 +261,11 @@ Happy messaging! 🚀
 
 Once the setup script completes, you'll have:
 
-1. ** Working Application**: Running at `http://localhost:5002`
-2. ** Database**: PostgreSQL with tables and triggers
-3. ** Dependencies**: All Python packages installed in virtual environment
-4. ** Configuration**: Environment variables and secrets properly set
-5. ** Real-time Features**: Live message updates enabled
+** Working Application**: Running at `http://localhost:5002`
+** Database**: PostgreSQL with tables and triggers
+** Dependencies**: All Python packages installed in virtual environment
+** Configuration**: Environment variables and secrets properly set
+** Real-time Features**: Live message updates enabled
 
 #### 📱 Using the Application
 
