@@ -1,6 +1,6 @@
 # Hatch - Real-time Messaging Service
 
-A comprehensive messaging service application built with Python, Flask, PostgreSQL, and Twilio SMS integration. Features real-time updates, structured logging, and a modern web interface.
+A comprehensive messaging service application built with Python, Flask, PostgreSQL, Twilio SMS integration, and SendGrid email functionality. Features real-time updates, structured logging, a modern web interface, and email composition with countdown timers.
 
 ## 🏗️ Architecture Overview
 
@@ -17,6 +17,12 @@ A comprehensive messaging service application built with Python, Flask, PostgreS
                        │   Twilio     │         │   Real-time     │
                        │   SMS API    │         │   Triggers      │
                        └──────────────┘         └─────────────────┘
+                               │
+                               ▼
+                       ┌──────────────┐
+                       │   SendGrid   │
+                       │   Email API  │
+                       └──────────────┘
 ```
 
 ### Real-time Updates Flow
@@ -35,22 +41,27 @@ lean_hatch/
 │   ├── api.py             # Main Flask app with REST endpoints
 │   ├── realtime.py        # Real-time updates via PostgreSQL LISTEN/NOTIFY
 │   └── templates/
-│       └── index.html     # Web interface with messaging UI
+│       └── index.html     # Web interface with messaging UI and email composer
 │
 ├── data_model/            # Data models and handlers
 │   ├── application_model.py    # Pydantic V2 models for business logic
-│   ├── database_model.py       # SQLAlchemy ORM models
-│   └── api_message_handler.py  # Message conversion & DB operations
+│   ├── database_model.py       # SQLAlchemy ORM models (Messages & Emails)
+│   └── api_message_handler.py  # Message/Email conversion & DB operations
 │
 ├── db/                    # Database connectivity
 │   └── postgres_connector.py   # PostgreSQL connection management
 │
 ├── providers/             # External service integrations
-│   └── rest_connector.py       # Twilio SMS client
+│   ├── rest_connector.py       # Twilio SMS client
+│   └── sendgrid_email_connector.py  # SendGrid email client
 │
 ├── utils/                 # Utilities and configuration
 │   ├── logger_config.py        # Structured logging with Rich
 │   └── exceptions.py           # Custom exception classes
+│
+├── tests/                 # Test files and templates
+│   ├── html_email_compatible.html  # Email-client-compatible template
+│   └── test_email_system.py       # Email system test script
 │
 └── sql/                   # Database scripts
     └── realtime_triggers.sql   # PostgreSQL triggers for real-time updates
@@ -65,13 +76,13 @@ User Input → Flask API → Data Models → Database → Real-time Updates → 
 ```
 
 **Detailed Flow:**
-1. **User sends message** via web interface
+1. **User sends message/email** via web interface
 2. **Flask API** (`api.py`) receives REST request
 3. **Message Handler** (`api_message_handler.py`) converts formats:
    - JSON → Pydantic models → SQLAlchemy models
-4. **Database** stores message with auto-generated `conversation_id`
-5. **PostgreSQL triggers** send NOTIFY event
-6. **Real-time module** broadcasts to connected clients
+4. **Database** stores message/email with auto-generated `conversation_id`
+5. **PostgreSQL triggers** send NOTIFY event (messages only)
+6. **Real-time module** broadcasts to connected clients (messages only)
 7. **Frontend** receives SSE event and updates UI
 
 ### 2. Data Model Relationships
@@ -86,6 +97,28 @@ Twilio JSON ──► hatchMessage ──► Message (DB)
      ▼              ▼
 twilioSMS ────► APIMessageHandler ────► PostgreSQL
 ```
+
+### 3. Email System Architecture
+
+```
+Email Composer ──► SendGrid API ──► EmailMessage ──► Email (DB)
+     │                    │             │             │
+     │                    │             │             ▼
+     │                    │             │        email_id
+     │                    │             │        (UUID)
+     │                    │             │
+     ▼                    ▼             ▼
+Email Modal ────► Flask API ────► SendGrid Connector ────► PostgreSQL
+```
+
+**Email Flow:**
+1. **User opens email composer** via modal popup
+2. **Email form submission** sends data to `/api/send_email`
+3. **APIMessageHandler** processes email request
+4. **SendGrid Connector** sends email via SendGrid API
+5. **Database** stores email record with provider response
+6. **Success/Error feedback** displayed with countdown timer
+7. **Modal auto-closes** after 5-second countdown
 
 ## 📊 Data Models
 
@@ -106,6 +139,33 @@ twilioSMS ────► APIMessageHandler ────► PostgreSQL
       status: str
       direction: str
   
+  class EmailMessage(BaseModel):
+      id: UUID4
+      to_email: str
+      from_email: str
+      subject: str
+      body: str
+      html_content: Optional[str]
+      cc: Optional[str]
+      bcc: Optional[str]
+      reply_to: Optional[str]
+      attachments: Optional[str]
+      timestamp: datetime
+      status: str
+      provider_response: Optional[str]
+  
+  class twilioSMS(BaseModel):
+      to: str = Field(regex=r'^\+\d{10,15}$')
+      from_: str = Field(alias='from', regex=r'^\+\d{10,15}$')
+      body: str = Field(max_length=1600)
+  ```
+      from_contact: str
+      body: str
+      conversation_id: UUID4  # Auto-generated from participants
+      timestamp: datetime
+      status: str
+      direction: str
+  
   class twilioSMS(BaseModel):
       to: str = Field(regex=r'^\+\d{10,15}$')
       from_: str = Field(alias='from', regex=r'^\+\d{10,15}$')
@@ -118,7 +178,13 @@ twilioSMS ────► APIMessageHandler ────► PostgreSQL
 - **Key Features**:
   - Auto-generated UUIDs
   - Timestamp tracking
-  - Conversation grouping via `conversation_id`
+  - Conversation grouping via `conversation_id` (messages)
+  - Separate tables for messages and emails
+  - Provider-specific fields for external service responses
+
+**Tables:**
+- `messages` - SMS/chat messages with conversation grouping
+- `emails` - Email records with SendGrid integration
 
 #### 3. **Conversation ID Generation**
 - **Algorithm**: SHA256 hash of sorted participant IDs → UUID
@@ -141,6 +207,7 @@ twilioSMS ────► APIMessageHandler ────► PostgreSQL
 | `/api/conversations` | GET | List all conversations | `{conversations: [...]}` |
 | `/api/conversation/<id>/messages` | GET | Get messages for conversation | `{messages: [...]}` |
 | `/api/send_message` | POST | Send new message | `{success: true, message_id: "..."}` |
+| `/api/send_email` | POST | Send email via SendGrid | `{success: true, email_id: "..."}` |
 | `/api/events` | GET | Server-Sent Events stream | `text/event-stream` |
 
 ### Real-time Events (`/api/events`)
@@ -160,6 +227,82 @@ twilioSMS ────► APIMessageHandler ────► PostgreSQL
   "timestamp": 1234567890
 }
 ```
+
+## 📧 Email System
+
+### Email Composer Modal
+
+The application includes a modern email composer accessible via a modal popup:
+
+**Features:**
+- **Modal Interface**: Clean popup overlay with form fields
+- **Real-time Validation**: Email format validation
+- **Success Feedback**: Visual confirmation with countdown timer
+- **Auto-close**: Modal automatically closes 5 seconds after success
+- **Error Handling**: Clear error messages for failed sends
+
+**Usage:**
+1. Click the "Compose Email" button in the sidebar
+2. Fill in recipient email, subject, and message body
+3. Click "Send Email" to submit
+4. Watch the countdown timer and automatic modal closure
+
+### Email API
+
+**Send Email Endpoint:**
+```http
+POST /api/send_email
+Content-Type: application/json
+
+{
+  "to_email": "recipient@example.com",
+  "subject": "Your Subject",
+  "body": "Your message content"
+}
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "email_id": "uuid-here",
+  "message": "Email sent successfully"
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "error": "Error description"
+}
+```
+
+### Email Templates
+
+The system uses email-client-compatible HTML templates:
+
+**Template Features:**
+- **Client Compatibility**: Works across major email clients
+- **No Animations**: Animations removed to prevent stripping
+- **Responsive Design**: Mobile-friendly layout
+- **Professional Styling**: Clean, modern appearance
+
+**Template Location**: `tests/html_email_compatible.html`
+
+### SendGrid Integration
+
+**Provider Configuration:**
+- **Service**: SendGrid API v3
+- **Authentication**: API key via environment variables
+- **Templates**: HTML template injection
+- **Response Tracking**: Provider responses stored in database
+
+**Database Storage:**
+- **Separate Table**: Emails stored in dedicated `emails` table
+- **Provider Data**: SendGrid message IDs and responses saved
+- **Metadata**: CC, BCC, reply-to, attachments support
+- **Status Tracking**: Send status and timestamp recording
 
 ## 🐳 Docker Deployment
 
@@ -446,6 +589,10 @@ POSTGRES_DB=hatchapp
 TWILIO_ACCOUNT_SID=your_account_sid
 TWILIO_AUTH_TOKEN=your_auth_token
 TWILIO_PHONE_NUMBER=+1234567890
+
+# SendGrid Configuration
+SENDGRID_API_KEY=your_sendgrid_api_key
+SENDGRID_FROM_EMAIL=your_verified_sender@example.com
 ```
 
 ### Database Setup
@@ -455,6 +602,7 @@ TWILIO_PHONE_NUMBER=+1234567890
    ```bash
    python3 -c "from db.postgres_connector import hatchPostgres; pg = hatchPostgres(); pg.create_tables()"
    ```
+   This creates both `messages` and `emails` tables
 3. **Apply real-time triggers**:
    ```bash
    psql -d hatchapp -f sql/realtime_triggers.sql
@@ -466,6 +614,7 @@ TWILIO_PHONE_NUMBER=+1234567890
 - Python 3.11+
 - PostgreSQL 13+
 - Twilio Account (for SMS)
+- SendGrid Account (for Email)
 
 ### Installation
 ```bash
@@ -493,7 +642,8 @@ python3 api.py
 3. **Send messages**: 
    - Phone numbers → Twilio SMS
    - Names → Database only
-4. **Real-time updates**: Messages appear instantly
+4. **Send emails**: Click "Compose Email" button for modal popup
+5. **Real-time updates**: Messages appear instantly (emails stored separately)
 
 ## 🔍 Development Guide
 
@@ -505,17 +655,26 @@ python3 api.py
 3. Add handler logic in `api_message_handler.py`
 4. Update frontend rendering in `index.html`
 
+#### 2. **New Email Features**
+1. Update `EmailMessage` model in `application_model.py`
+2. Modify `dbEmail` table in `database_model.py`
+3. Add processing logic in `sendgrid_email_connector.py`
+4. Update email templates in `tests/` directory
+5. Modify email composer modal in `index.html`
+
 #### 2. **New API Endpoints**
 1. Add route in `api.py`
 2. Follow existing patterns for database session management
 3. Use structured logging with `logger_instance`
 4. Return consistent JSON format
+5. For email endpoints, integrate with SendGrid connector
 
 #### 3. **Database Changes**
 1. Update SQLAlchemy models in `database_model.py`
 2. Create migration script (manual for now)
 3. Update Pydantic models if needed
 4. Test with existing data
+5. For emails: Use separate `emails` table, not `messages`
 
 ### Debugging
 
@@ -571,17 +730,28 @@ except Exception as e:
 curl http://localhost:5002/api/conversations
 curl http://localhost:5002/api/conversation/<id>/messages
 
+# Test email endpoint
+curl -X POST http://localhost:5002/api/send_email \
+  -H "Content-Type: application/json" \
+  -d '{"to_email": "test@example.com", "subject": "Test", "body": "Test message"}'
+
 # Test SSE connection
 curl -N http://localhost:5002/api/events
 
 # Test database triggers
 psql -d hatchapp -c "INSERT INTO messages (...) VALUES (...);"
+
+# Test email system
+python3 tests/test_email_system.py
 ```
 
 ### Integration Testing
 - **Message Flow**: Send message → Check database → Verify SSE event
+- **Email Flow**: Send email → Check SendGrid response → Verify database storage
 - **Twilio Integration**: Test with real phone numbers
-- **Real-time Updates**: Multiple browser windows should sync
+- **SendGrid Integration**: Test with verified sender addresses
+- **Real-time Updates**: Multiple browser windows should sync (messages only)
+- **Email Modal**: Test countdown timer and auto-close functionality
 
 ## 📈 Performance Considerations
 
@@ -623,6 +793,7 @@ psql -d hatchapp -c "INSERT INTO messages (...) VALUES (...);"
 - **Pydantic**: Data validation and serialization
 - **psycopg2**: PostgreSQL adapter
 - **Twilio**: SMS service integration
+- **SendGrid**: Email service integration
 - **Rich**: Enhanced logging and formatting
 
 ### Development Dependencies
@@ -644,6 +815,74 @@ psql -d hatchapp -c "INSERT INTO messages (...) VALUES (...);"
 
 ---
 
+## 📧 Email Feature Details
+
+### Email vs Message Separation
+
+The application maintains clear separation between messaging and email functionality:
+
+**Messages Table:**
+- SMS and chat messages
+- Conversation grouping via `conversation_id`
+- Real-time updates via PostgreSQL triggers
+- Twilio integration for SMS delivery
+
+**Emails Table:**
+- Email records with full metadata
+- SendGrid integration for delivery
+- No real-time updates (separate workflow)
+- Provider response tracking
+
+### Email Client Compatibility
+
+**Template Design:**
+- Removed CSS animations (often stripped by email clients)
+- Table-based layouts for maximum compatibility
+- Inline CSS for consistent rendering
+- Mobile-responsive design patterns
+
+**Supported Clients:**
+- Gmail, Outlook, Yahoo Mail
+- Apple Mail, Thunderbird
+- Mobile email clients (iOS, Android)
+
+### Email Modal Features
+
+**User Experience:**
+- Clean modal overlay design
+- Real-time form validation
+- Visual success/error feedback
+- Countdown timer with progress bar
+- Automatic modal closure after success
+
+**Technical Implementation:**
+- Event-driven JavaScript
+- Fetch API for form submission
+- CSS animations for countdown
+- Error handling with user feedback
+
+### SendGrid Integration Notes
+
+**API Usage:**
+- SendGrid API v3 for email delivery
+- Content object structure for HTML emails
+- Template injection for dynamic content
+- Response tracking and error handling
+
+**Database Storage:**
+- External message IDs from SendGrid
+- Provider response data preservation
+- Send status and timestamp tracking
+- Support for CC, BCC, reply-to, attachments
+
+### Email Development Tips
+
+1. **Template Updates**: Modify `tests/html_email_compatible.html`
+2. **Modal Styling**: Update CSS in `templates/index.html`
+3. **API Integration**: Extend `sendgrid_email_connector.py`
+4. **Database Schema**: Add fields to `dbEmail` in `database_model.py`
+5. **Error Handling**: Update response processing in `api_message_handler.py`
+
 ## 📞 Support
 
 For questions or issues:
@@ -651,5 +890,7 @@ For questions or issues:
 2. Verify database connection and triggers
 3. Test API endpoints individually
 4. Check browser console for frontend issues
+5. **For emails**: Verify SendGrid API key and sender verification
+6. **For modal issues**: Check browser developer tools for JavaScript errors
 
 **Happy coding! 🚀**
