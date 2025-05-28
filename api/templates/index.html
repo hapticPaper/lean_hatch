@@ -89,12 +89,39 @@
             background: white;
             border-bottom: 1px solid #e9ecef;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .sidebar-header h1 {
             color: #333;
             font-size: 1.5rem;
             font-weight: 300;
+            margin: 0;
+        }
+
+        .compose-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .compose-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            color: white;
+            text-decoration: none;
         }
 
         .conversations-list {
@@ -442,6 +469,209 @@
             color: #ff453a;
             text-align: center;
         }
+
+        /* Email Composer Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.show .modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 300;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .modal-form-group {
+            margin-bottom: 20px;
+        }
+
+        .modal-form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-form-group input,
+        .modal-form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .modal-form-group input:focus,
+        .modal-form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .modal-btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .modal-btn-secondary {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #e1e5e9;
+        }
+
+        .modal-btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .modal-status {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modal-status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .modal-status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .countdown-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            width: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.1s linear;
+            border-radius: 0 0 6px 6px;
+        }
+
+        .modal-status.error .countdown-bar {
+            background: linear-gradient(90deg, #dc3545, #fd7e14);
+        }
+
+        @media (max-width: 600px) {
+            .modal {
+                width: 95%;
+                margin: 10px;
+            }
+            
+            .modal-buttons {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
@@ -458,6 +688,9 @@
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h1>Messages</h1>
+                <button class="compose-btn" onclick="openEmailModal()">
+                    📧 Compose Email
+                </button>
             </div>
             <div class="conversations-list" id="conversationsList">
                 <div class="loading">Loading conversations...</div>
@@ -495,6 +728,50 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Composer Modal -->
+    <div class="modal-overlay" id="emailModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>📧 Compose Email</h2>
+                <button class="modal-close" onclick="closeEmailModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-status" id="modalStatus">
+                    <div class="countdown-bar" id="countdownBar"></div>
+                </div>
+                
+                <form id="modalEmailForm">
+                    <div class="modal-form-group">
+                        <label for="modalTo">To:</label>
+                        <input type="email" id="modalTo" name="to" required 
+                               placeholder="recipient@example.com">
+                    </div>
+                    
+                    <div class="modal-form-group">
+                        <label for="modalSubject">Subject:</label>
+                        <input type="text" id="modalSubject" name="subject" required 
+                               placeholder="Enter email subject">
+                    </div>
+                    
+                    <div class="modal-form-group">
+                        <label for="modalBody">Message:</label>
+                        <textarea id="modalBody" name="body" required 
+                                  placeholder="Enter your email message here..."></textarea>
+                    </div>
+                    
+                    <div class="modal-buttons">
+                        <button type="button" class="modal-btn modal-btn-secondary" onclick="closeEmailModal()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="modal-btn modal-btn-primary" id="modalSendButton">
+                            📤 Send Email
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -970,6 +1247,161 @@
         window.addEventListener('beforeunload', function() {
             if (eventSource) {
                 eventSource.close();
+            }
+        });
+
+        // Email Modal Functions
+        let modalCountdownTimer = null;
+        
+        function openEmailModal() {
+            document.getElementById('emailModal').classList.add('show');
+            // Clear any previous status and reset form
+            document.getElementById('modalStatus').style.display = 'none';
+            document.getElementById('modalEmailForm').reset();
+        }
+        
+        function closeEmailModal() {
+            // Clear any running countdown
+            if (modalCountdownTimer) {
+                clearTimeout(modalCountdownTimer);
+                modalCountdownTimer = null;
+            }
+            
+            document.getElementById('emailModal').classList.remove('show');
+        }
+        
+        function showModalStatus(message, isError = false) {
+            const statusEl = document.getElementById('modalStatus');
+            
+            if (!statusEl) {
+                return;
+            }
+            
+            // Preserve the countdown bar HTML and just set the message text
+            statusEl.innerHTML = `${message}<div class="countdown-bar" id="countdownBar"></div>`;
+            statusEl.className = `modal-status ${isError ? 'error' : 'success'}`;
+            statusEl.style.display = 'block';
+            
+            // Only start countdown for success messages
+            if (!isError) {
+                // Give the DOM a moment to update before starting countdown
+                setTimeout(() => {
+                    startCountdown();
+                }, 100);
+            }
+        }
+        
+        function startCountdown() {
+            const countdownBar = document.getElementById('countdownBar');
+            const statusEl = document.getElementById('modalStatus');
+            
+            if (!countdownBar) {
+                return;
+            }
+            
+            // Clear any existing timer first
+            if (modalCountdownTimer) {
+                clearInterval(modalCountdownTimer);
+                modalCountdownTimer = null;
+            }
+            
+            // Make sure the bar is visible and starts at 100%
+            countdownBar.style.display = 'block';
+            countdownBar.style.width = '100%';
+            countdownBar.style.opacity = '1';
+            
+            let width = 100;
+            const duration = 5000; // 5 seconds
+            const interval = 50; // Update every 50ms for smoother animation
+            const decrement = (interval / duration) * 100;
+            
+            const countdown = setInterval(() => {
+                width -= decrement;
+                
+                if (width <= 0) {
+                    width = 0;
+                    countdownBar.style.width = '0%';
+                    clearInterval(countdown);
+                    modalCountdownTimer = null;
+                    setTimeout(() => {
+                        closeEmailModal();
+                    }, 100); // Small delay to see the bar complete
+                } else {
+                    countdownBar.style.width = width + '%';
+                }
+            }, interval);
+            
+            // Store timer reference for cleanup
+            modalCountdownTimer = countdown;
+        }
+        
+        function setModalLoading(loading) {
+            const sendButton = document.getElementById('modalSendButton');
+            const form = document.querySelector('.modal-body');
+            
+            if (loading) {
+                form.style.opacity = '0.6';
+                form.style.pointerEvents = 'none';
+                sendButton.textContent = '📤 Sending...';
+                sendButton.disabled = true;
+            } else {
+                form.style.opacity = '1';
+                form.style.pointerEvents = 'auto';
+                sendButton.textContent = '📤 Send Email';
+                sendButton.disabled = false;
+            }
+        }
+        
+        // Email form submission
+        document.getElementById('modalEmailForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const emailData = {
+                to_email: formData.get('to'),
+                subject: formData.get('subject'),
+                body: formData.get('body')
+            };
+
+            setModalLoading(true);
+            document.getElementById('modalStatus').style.display = 'none';
+
+            try {
+                const response = await fetch('/api/send_email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(emailData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showModalStatus(`✅ Email sent successfully! Message ID: ${result.email_id || 'N/A'}`);
+                    document.getElementById('modalEmailForm').reset(); // Clear the form
+                } else {
+                    showModalStatus(`❌ Failed to send email: ${result.error || 'Unknown error'}`, true);
+                }
+            } catch (error) {
+                console.error('Error sending email:', error);
+                showModalStatus(`❌ Network error: ${error.message}`, true);
+            } finally {
+                setModalLoading(false);
+            }
+        });
+        
+        // Close modal when clicking outside of it
+        document.getElementById('emailModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEmailModal();
+            }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('emailModal').classList.contains('show')) {
+                closeEmailModal();
             }
         });
     </script>

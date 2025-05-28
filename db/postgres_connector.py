@@ -1,6 +1,6 @@
 
 from utils import *
-from data_model import hatchUser, MessageType, Message, SMSMessage, EmailMessage, User, modelMetaData, APIMessageHandler
+from data_model import hatchUser, MessageType, Message, SMSMessage, EmailMessage, User, modelMetaData, APIMessageHandler, dbEmail
 
 
 l = logger
@@ -57,14 +57,15 @@ class hatchPostgres():
             return None
 
     def create_tables(self):
-        """Create all tables using ORM metadata."""
+        """Create all tables using ORM metadata (CREATE IF NOT EXISTS behavior)."""
         if self.engine is None:
             l.error("No engine available. Connect first.")
             return False
             
         try:
-            modelMetaData.create_all(self.engine, checkfirst=False)
-            l.info("Database schema created successfully using ORM.")
+            # checkfirst=True is the default and provides CREATE IF NOT EXISTS behavior
+            modelMetaData.create_all(self.engine, checkfirst=True)
+            l.info("Database schema created/updated successfully using ORM.")
             return True
         except Exception as e:
             l.error("Failed to create database schema.", error=e)

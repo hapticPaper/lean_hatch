@@ -4,7 +4,6 @@ from enum import Enum
 from datetime import datetime
 import hashlib
 
-
 def generate_conversation_id(to: str, from_: str) -> UUID:
     """Generate a conversation ID by sorting to/from IDs, concatenating, and hashing to UUID."""
     # Sort the IDs to ensure consistent conversation IDs regardless of message direction
@@ -81,7 +80,7 @@ class twilioSMS(BaseModel):
     timestamp: datetime | None = None
 
 
-    
+
     def __init__(self, **data):
         super().__init__(**data)
         if self.conversation_id is None:
@@ -182,7 +181,20 @@ class SMSMessage(hatchMessage):
 
 class EmailMessage(hatchMessage):
     """Email message model."""
-    
+    subject: str
+    to_contact: str  # Changed from To to str for consistency
+    from_contact: str  # Changed from Email to str for consistency  
+    body: str  # Use body instead of content for consistency with parent class
+    html_content: str | None = None  # Optional HTML content
     type: MessageType = MessageType.EMAIL
+    
+    # Email-specific fields
+    cc: list[str] | None = None
+    bcc: list[str] | None = None
+    reply_to: str | None = None
+    attachments: list[str] | None = None
+    provider_response: dict | None = None  # Store provider response data
+
+    model_config = ConfigDict(from_attributes=True)
 
     

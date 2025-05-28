@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, String, Uuid, DateTime, Float
+from sqlalchemy import Column, Integer, String, Uuid, DateTime, Float, Text
 
 from sqlalchemy.orm import declarative_base
-from sqlalchemy.schema import MetaData, CreateSchema
+from sqlalchemy.schema import MetaData
 
 
 modelMetaData = MetaData(schema="public")
@@ -40,5 +40,41 @@ class Message(Base):
 
     def __repr__(self):
         return f"<Message(id={self.id}, from={self.from_contact}, to={self.to_contact}, content={self.body}, status={self.status}, sid={self.external_sid})>"
+
+
+class dbEmail(Base):
+    __tablename__ = 'emails'
     
+    id = Column(Uuid, primary_key=True)
+    to_contact = Column(String, nullable=False)
+    from_contact = Column(String, nullable=False)
+    subject = Column(String, nullable=False)
+    body = Column(Text)  # Plain text content
+    html_content = Column(Text)  # HTML content
+    type = Column(String, default='email')
+    timestamp = Column(DateTime)
+    status = Column(String)
+    conversation_id = Column(Uuid)  # Generated from sorted to/from IDs
+    direction = Column(String)  # inbound-api, outbound-api, etc.
+    
+    # Email-specific fields
+    cc = Column(String)  # JSON string for list of CC emails
+    bcc = Column(String)  # JSON string for list of BCC emails
+    reply_to = Column(String)
+    attachments = Column(String)  # JSON string for list of attachments
+    
+    # Provider-specific fields
+    external_message_id = Column(String)  # SendGrid message ID
+    provider = Column(String, default='sendgrid')
+    provider_response = Column(Text)  # JSON string for full provider response
+    
+    # Tracking fields
+    date_sent = Column(DateTime)
+    date_updated = Column(DateTime)
+    error_code = Column(Integer)
+    error_message = Column(String)
+
+    def __repr__(self):
+        return f"<dbEmail(id={self.id}, from={self.from_contact}, to={self.to_contact}, subject={self.subject}, status={self.status}, message_id={self.external_message_id})>"
+
 

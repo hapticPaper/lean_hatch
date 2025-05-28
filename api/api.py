@@ -321,5 +321,44 @@ def stream_events():
 def favicon():
     return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
+@app.route('/api/send_email', methods=['POST'])
+def send_email():
+    """
+    API endpoint to send an email.
+    Handles email sending through the application's message handling system.
+    """
+    try:
+        data = request.json
+        if not data or not all(k in data for k in ('to_email', 'subject', 'body')):
+            return jsonify({"error": "Missing required fields: to_email, subject, body"}), 400
+        
+        to_email = data['to_email']
+        subject = data['subject']
+        body = data['body']
+        from_email = data.get('from_email', 'ian@hapticpaper.com')  # Default sender
+        
+        logger_instance.info("Sending email via API", to=to_email, subject=subject)
+        
+        # Send email through the message handler
+        email_msg, response_data = APIMessageHandler.send_email_via_sendgrid(
+            to_email=to_email,
+            subject=subject,
+            body=body,
+            from_email=from_email,
+            save_to_db=True
+        )
+        
+        return jsonify({
+            "success": True,
+            "email_id": str(email_msg.id),
+            "status": email_msg.status,
+            "message_id": response_data.get('message_id'),
+            "method": "sendgrid"
+        }), 200
+        
+    except Exception as e:
+        logger_instance.error("Failed to send email via API", error=str(e))
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5002, debug=True)

@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Hatch - Optimized Animated Email</title>
+    <!--[if mso]>
+    <xml>
+        <o:OfficeDocumentSettings>
+            <o:AllowPNG/>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+    </xml>
+    <![endif]-->
+    <style>
+        /* CSS Reset for Email */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        img { border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
+        table { border-collapse: collapse; }
+        td { padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.6;
+            background: #f5f7fa;
+            margin: 0;
+            padding: 0;
+            width: 100% !important;
+            min-width: 100%;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        
+        /* Main Container */
+        .email-wrapper {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+            background-size: 400% 400%;
+            animation: backgroundFlow 8s ease infinite;
+            padding: 20px 0;
+            min-height: 100vh;
+        }
+        
+        @keyframes backgroundFlow {
+            0% { background-position: 0% 50%; }
+            25% { background-position: 100% 50%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        
+        /* Animated Header with Particles */
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
+            background-size: 300% 300%;
+            animation: gradientShift 6s ease infinite;
+            padding: 50px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Animated Particles */
+        .particle {
+            position: absolute;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .particle:nth-child(1) {
+            width: 20px; height: 20px;
+            top: 10%; left: 20%;
+            animation: float1 4s ease-in-out infinite;
+        }
+        
+        .particle:nth-child(2) {
+            width: 15px; height: 15px;
+            top: 70%; right: 10%;
+            animation: float2 5s ease-in-out infinite;
+        }
+        
+        .particle:nth-child(3) {
+            width: 25px; height: 25px;
+            bottom: 20%; left: 10%;
+            animation: float3 6s ease-in-out infinite;
+        }
+        
+        .particle:nth-child(4) {
+            width: 18px; height: 18px;
+            top: 30%; right: 30%;
+            animation: float4 3.5s ease-in-out infinite;
+        }
+        
+        @keyframes float1 {
+            0%, 100% { transform: translateY(0px) scale(1) rotate(0deg); opacity: 0.6; }
+            50% { transform: translateY(-30px) scale(1.2) rotate(180deg); opacity: 1; }
+        }
+        
+        @keyframes float2 {
+            0%, 100% { transform: translateX(0px) scale(1) rotate(0deg); opacity: 0.5; }
+            50% { transform: translateX(20px) scale(0.8) rotate(-90deg); opacity: 0.9; }
+        }
+        
+        @keyframes float3 {
+            0%, 100% { transform: translate(0px, 0px) scale(1) rotate(0deg); opacity: 0.7; }
+            33% { transform: translate(15px, -20px) scale(1.1) rotate(120deg); opacity: 1; }
+            66% { transform: translate(-10px, 10px) scale(0.9) rotate(240deg); opacity: 0.8; }
+        }
+        
+        @keyframes float4 {
+            0%, 100% { transform: translateY(0px) scale(1) rotate(0deg); opacity: 0.4; }
+            50% { transform: translateY(25px) scale(1.3) rotate(360deg); opacity: 0.8; }
+        }
+        
+        /* Logo with Advanced Animation */
+        .logo {
+            font-size: 3rem;
+            font-weight: 300;
+            color: white;
+            margin-bottom: 15px;
+            letter-spacing: 4px;
+            animation: logoAnimation 3s ease-in-out infinite;
+            text-shadow: 0 0 20px rgba(255,255,255,0.5);
+            position: relative;
+            z-index: 10;
+        }
+        
+        @keyframes logoAnimation {
+            0%, 100% { 
+                transform: scale(1) rotateY(0deg);
+                text-shadow: 0 0 20px rgba(255,255,255,0.5);
+            }
+            25% { 
+                transform: scale(1.05) rotateY(5deg);
+                text-shadow: 0 0 30px rgba(255,255,255,0.8), 0 0 40px rgba(102,126,234,0.3);
+            }
+            50% { 
+                transform: scale(1.1) rotateY(0deg);
+                text-shadow: 0 0 40px rgba(255,255,255,1), 0 0 60px rgba(118,75,162,0.5);
+            }
+            75% { 
+                transform: scale(1.05) rotateY(-5deg);
+                text-shadow: 0 0 30px rgba(255,255,255,0.8), 0 0 40px rgba(240,147,251,0.3);
+            }
+        }
+        
+        .tagline {
+            color: rgba(255,255,255,0.95);
+            font-size: 1.2rem;
+            font-weight: 400;
+            animation: fadeInUp 2s ease-out;
+            position: relative;
+            z-index: 10;
+        }
+        
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Content Area */
+        .content {
+            padding: 50px 40px;
+            position: relative;
+        }
+        
+        .welcome-message {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            text-align: center;
+            animation: slideInFromLeft 1.2s ease-out;
+            font-weight: 600;
+        }
+        
+        @keyframes slideInFromLeft {
+            0% { opacity: 0; transform: translateX(-50px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        
+        /* Animated Progress Indicator */
+        .progress-section {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .progress-ring {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+        
+        .progress-ring svg {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+        
+        .progress-ring circle {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+        }
+        
+        .progress-bg {
+            stroke: #e9ecef;
+        }
+        
+        .progress-bar {
+            stroke: url(#gradient);
+            stroke-dasharray: 283;
+            stroke-dashoffset: 283;
+            animation: progressAnimation 3s ease-in-out infinite;
+        }
+        
+        @keyframes progressAnimation {
+            0% { stroke-dashoffset: 283; }
+            50% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: 283; }
+        }
+        
+        .progress-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #667eea;
+            animation: counterAnimation 3s ease-in-out infinite;
+        }
+        
+        @keyframes counterAnimation {
+            0% { content: "0%"; }
+            50% { content: "100%"; }
+            100% { content: "0%"; }
+        }
+        
+        .message-body {
+            font-size: 1.1rem;
+            color: #5a6c7d;
+            margin-bottom: 35px;
+            line-height: 1.8;
+            animation: fadeInDelay 1.8s ease-out;
+        }
+        
+        @keyframes fadeInDelay {
+            0% { opacity: 0; }
+            60% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        /* Enhanced CTA Button */
+        .cta-container {
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
+            background-size: 300% 300%;
+            color: white;
+            padding: 18px 40px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            animation: buttonFloat 4s ease-in-out infinite;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        
+        .cta-button:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+            background-position: 100% 50%;
+        }
+        
+        .cta-button:hover:before {
+            left: 100%;
+        }
+        
+        @keyframes buttonFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        /* Feature Grid with Enhanced Animations */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+        
+        .feature-item {
+            text-align: center;
+            padding: 25px 15px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            animation: featureSlideIn 1s ease-out;
+            animation-fill-mode: both;
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-item:nth-child(1) { animation-delay: 0.2s; }
+        .feature-item:nth-child(2) { animation-delay: 0.4s; }
+        .feature-item:nth-child(3) { animation-delay: 0.6s; }
+        
+        .feature-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        @keyframes featureSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            animation: iconBounce 2s ease-in-out infinite;
+        }
+        
+        @keyframes iconBounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0) scale(1); }
+            40% { transform: translateY(-10px) scale(1.1); }
+            60% { transform: translateY(-5px) scale(1.05); }
+        }
+        
+        .feature-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .feature-description {
+            font-size: 0.95rem;
+            color: #5a6c7d;
+            line-height: 1.5;
+        }
+        
+        /* Stats Section */
+        .stats-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 40px;
+            margin: 40px 0;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            animation: statCountUp 2s ease-out;
+            animation-fill-mode: both;
+        }
+        
+        .stat-item:nth-child(1) { animation-delay: 0.5s; }
+        .stat-item:nth-child(2) { animation-delay: 0.7s; }
+        .stat-item:nth-child(3) { animation-delay: 0.9s; }
+        
+        @keyframes statCountUp {
+            0% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #5a6c7d;
+            margin-top: 5px;
+        }
+        
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .footer-content {
+            animation: footerSlideUp 1.5s ease-out;
+        }
+        
+        @keyframes footerSlideUp {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .social-links {
+            margin: 25px 0;
+        }
+        
+        .social-link {
+            display: inline-block;
+            margin: 0 15px;
+            padding: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            text-decoration: none;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            animation: socialPulse 3s ease-in-out infinite;
+        }
+        
+        .social-link:nth-child(1) { animation-delay: 0s; }
+        .social-link:nth-child(2) { animation-delay: 1s; }
+        .social-link:nth-child(3) { animation-delay: 2s; }
+        
+        .social-link:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.2) rotate(5deg);
+        }
+        
+        @keyframes socialPulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(255,255,255,0.2); }
+            50% { box-shadow: 0 0 25px rgba(255,255,255,0.4); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 640px) {
+            .email-wrapper { padding: 10px 0; }
+            .email-container { margin: 0 10px; border-radius: 12px; }
+            .header { padding: 40px 20px; }
+            .logo { font-size: 2.5rem; letter-spacing: 2px; }
+            .content { padding: 40px 25px; }
+            .welcome-message { font-size: 1.6rem; }
+            .features { grid-template-columns: 1fr; gap: 20px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        @media (max-width: 480px) {
+            .header { padding: 30px 15px; }
+            .logo { font-size: 2rem; }
+            .content { padding: 30px 20px; }
+            .welcome-message { font-size: 1.4rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+        
+        /* Email Client Fallbacks */
+        @media screen and (-webkit-min-device-pixel-ratio: 0) {
+            .email-wrapper { background: #667eea !important; }
+        }
+        
+        /* Outlook specific */
+        <!--[if mso]>
+        <style type="text/css">
+            .email-wrapper { background: #667eea !important; }
+            .header { background: #667eea !important; }
+            .cta-button { background: #667eea !important; }
+            .progress-bar { stroke: #667eea !important; }
+            .particle { display: none !important; }
+            .features { display: block !important; }
+            .feature-item { display: inline-block !important; width: 30% !important; }
+        </style>
+        <![endif]-->
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="email-container">
+            <!-- Animated Header with Enhanced Particles -->
+            <div class="header">
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                
+                <div class="logo">HATCH</div>
+                <div class="tagline">Where conversations come alive with style</div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="content">
+                <h1 class="welcome-message">Experience the Future of Messaging</h1>
+                
+                <!-- Animated Progress Ring -->
+                <div class="progress-section">
+                    <div class="progress-ring">
+                        <svg>
+                            <defs>
+                                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                    <stop offset="50%" style="stop-color:#764ba2;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <circle class="progress-bg" cx="60" cy="60" r="45"></circle>
+                            <circle class="progress-bar" cx="60" cy="60" r="45"></circle>
+                        </svg>
+                        <div class="progress-percentage">100%</div>
+                    </div>
+                    <p style="color: #5a6c7d; font-size: 1rem;">Setting up your amazing experience...</p>
+                </div>
+                
+                <p class="message-body">
+                    Welcome to our next-generation messaging platform! This beautifully crafted email showcases 
+                    our commitment to exceptional design and user experience. Every element is carefully animated 
+                    to create an engaging and memorable interaction.
+                </p>
+                
+                <div class="cta-container">
+                    <a href="#" class="cta-button">Launch Your Journey</a>
+                </div>
+                
+                <!-- Enhanced Feature Highlights -->
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon">💬</div>
+                        <div class="feature-title">Real-time Chat</div>
+                        <div class="feature-description">Instant messaging with live status updates and typing indicators</div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">⚡</div>
+                        <div class="feature-title">Lightning Speed</div>
+                        <div class="feature-description">Optimized performance with sub-second message delivery</div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">🛡️</div>
+                        <div class="feature-title">Bank-grade Security</div>
+                        <div class="feature-description">End-to-end encryption with advanced privacy controls</div>
+                    </div>
+                </div>
+                
+                <!-- Stats Section -->
+                <div class="stats-section">
+                    <h3 style="color: #2c3e50; margin-bottom: 10px;">Trusted by thousands worldwide</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-number">50K+</span>
+                            <span class="stat-label">Active Users</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">1M+</span>
+                            <span class="stat-label">Messages Sent</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">99.9%</span>
+                            <span class="stat-label">Uptime</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="message-body">
+                    Join our growing community of users who experience seamless communication every day. 
+                    With beautiful animations, intuitive design, and powerful features, Hatch transforms 
+                    the way you connect with others.
+                </p>
+            </div>
+            
+            <!-- Enhanced Footer -->
+            <div class="footer">
+                <div class="footer-content">
+                    <h3 style="margin-bottom: 15px; font-weight: 300;">Stay Connected</h3>
+                    <p style="margin-bottom: 20px; opacity: 0.9;">
+                        Thank you for experiencing our advanced email capabilities!<br>
+                        This demonstration showcases our platform's design excellence.
+                    </p>
+                    
+                    <div class="social-links">
+                        <a href="#" class="social-link" title="Website">🌐</a>
+                        <a href="#" class="social-link" title="Email">📧</a>
+                        <a href="#" class="social-link" title="Support">💬</a>
+                    </div>
+                    
+                    <p style="margin-top: 25px; font-size: 0.85rem; opacity: 0.7;">
+                        © 2025 Hatch Messaging Platform. All rights reserved.<br>
+                        This is a test email designed to showcase our capabilities.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

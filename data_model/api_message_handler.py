@@ -13,11 +13,11 @@ from data_model.application_model import (
     MessageType, hatchMessage, SMSMessage, EmailMessage, apiMessage, MessageStatus, MessageDirection
 )
 from data_model.database_model import (
-    Message
+    Message, dbEmail
 )
 from data_model.application_model import generate_conversation_id
 
-l = logger
+logger_instance = logger
 
 
 
@@ -152,6 +152,79 @@ class twilioSMSResponseHandler(BaseModel):
         return sms_response, response_headers
 
 
+class sendgridEmailResponseHandler(BaseModel):
+    """Handler specifically for SendGrid Email API responses."""
+    
+    @staticmethod
+    def from_response_dict(response_dict: dict, headers_dict: dict) -> 'EmailMessage':
+        """Converts SendGrid response to EmailMessage model."""
+        from data_model.application_model import generate_conversation_id
+        
+        # Parse datetime fields properly
+        def parse_datetime_field(date_value):
+            """Parse datetime from various formats including HTTP date format."""
+            if not date_value or not isinstance(date_value, str):
+                return datetime.now()
+            
+            try:
+                # Try parsing HTTP date format first
+                from email.utils import parsedate_to_datetime
+                return parsedate_to_datetime(date_value)
+            except (ValueError, TypeError):
+                try:
+                    # Try ISO format
+                    return datetime.fromisoformat(date_value)
+                except (ValueError, TypeError):
+                    return datetime.now()
+        
+        # Extract essential fields from response
+        status_code = response_dict.get('status_code', 202)
+        message_id = headers_dict.get('X-Message-Id', headers_dict.get('x-message-id'))
+        date_sent = parse_datetime_field(headers_dict.get('Date', headers_dict.get('date')))
+        
+        # Create conversation ID from from/to emails
+        from_email = response_dict.get('from_email', '')
+        to_email = response_dict.get('to_email', '')
+        conversation_id = generate_conversation_id(to_email, from_email)
+        
+        return EmailMessage(
+            id=uuid4(),
+            to_contact=to_email,
+            from_contact=from_email,
+            body=response_dict.get('content', ''),
+            type=MessageType.EMAIL,
+            timestamp=date_sent,
+            status=MessageStatus.SENT.value if status_code == 202 else MessageStatus.FAILED.value,
+            direction=MessageDirection.OUTBOUND_API.value,
+            conversation_id=conversation_id,
+            subject=response_dict.get('subject', ''),
+            html_content=response_dict.get('html_content'),
+            external_sid=message_id,
+            provider_response={
+                'status_code': status_code,
+                'headers': headers_dict,
+                'message_id': message_id
+            }
+        )
+
+
+class createSendGridEmail(BaseModel):
+    """Helper for creating SendGrid email requests."""
+    
+    @staticmethod
+    def to_sendgrid_format(from_email: str, to_email: str, subject: str, 
+                          content: str | None = None, html_content: str | None = None) -> dict:
+        """Creates SendGrid-compatible email data."""
+        return {
+            'from_email': from_email,
+            'to_email': to_email,
+            'subject': subject,
+            'content': content,
+            'html_content': html_content,
+            'timestamp': datetime.now()
+        }
+
+
 class APIMessageHandler:
     """Handler for API messages, responsible for converting and saving messages."""
     
@@ -207,6 +280,7 @@ class APIMessageHandler:
                 to_contact=api_msg.to,
                 from_contact=api_msg.from_,
                 body=api_msg.body,
+                subject=getattr(api_msg, 'subject', 'No Subject'),  # Add default subject
                 type=api_msg.type,
                 timestamp=api_msg.timestamp,
                 status=api_msg.status or MessageStatus.RECEIVED.value,
@@ -284,21 +358,73 @@ class APIMessageHandler:
                 self.session.add(db_message)
                 if auto_commit:
                     self.session.commit()
-                    l.info("Message saved to database successfully", 
+                    logger_instance.info("Message saved to database successfully", 
                           message_id=str(db_message.id),
                           conversation_id=str(db_message.conversation_id),
                           to=db_message.to_contact,
                           from_=db_message.from_contact)
             except Exception as e:
                 self.session.rollback()
-                l.error("Failed to save message to database", 
+                logger_instance.error("Failed to save message to database", 
                        error=str(e),
                        message_id=str(db_message.id))
                 raise
         else:
-            l.warning("No database session available - message not saved to database")
+            logger_instance.warning("No database session available - message not saved to database")
         
         return db_message
+    
+    def save_email(self, email: EmailMessage, auto_commit: bool = True) -> dbEmail:
+        """Converts EmailMessage application model to Email database model and saves to PostgreSQL."""
+        import json
+        
+        db_email = dbEmail(
+            id=email.id,
+            to_contact=email.to_contact,
+            from_contact=email.from_contact,
+            subject=email.subject,
+            body=email.body,
+            html_content=email.html_content,
+            type=email.type.value,
+            timestamp=email.timestamp,
+            status=email.status,
+            conversation_id=email.conversation_id,
+            direction=email.direction,
+            cc=json.dumps(email.cc) if email.cc else None,
+            bcc=json.dumps(email.bcc) if email.bcc else None,
+            reply_to=email.reply_to,
+            attachments=json.dumps(email.attachments) if email.attachments else None,
+            external_message_id=email.external_sid,
+            provider='sendgrid',
+            provider_response=json.dumps(email.provider_response) if email.provider_response else None,
+            date_sent=email.date_sent,
+            date_updated=email.date_updated,
+            error_code=email.error_code,
+            error_message=email.error_message
+        )
+        
+        # Save to database if session is available
+        if self.session is not None:
+            try:
+                self.session.add(db_email)
+                if auto_commit:
+                    self.session.commit()
+                    logger_instance.info("Email saved to database successfully", 
+                          email_id=str(db_email.id),
+                          conversation_id=str(db_email.conversation_id),
+                          to=db_email.to_contact,
+                          from_=db_email.from_contact,
+                          subject=db_email.subject)
+            except Exception as e:
+                self.session.rollback()
+                logger_instance.error("Failed to save email to database", 
+                       error=str(e),
+                       email_id=str(db_email.id))
+                raise
+        else:
+            logger_instance.warning("No database session available - email not saved to database")
+        
+        return db_email
     
     @classmethod
     def process_json_message(cls, json_data: dict, save_to_db: bool = True) -> tuple[apiMessage, hatchMessage, Message]:
@@ -327,11 +453,72 @@ class APIMessageHandler:
         
         return app_data, db_msg
     
+    @classmethod
+    def process_sendgrid_response(cls, response_dict: dict, headers_dict: dict, save_to_db: bool = True) -> tuple[EmailMessage, dbEmail]:
+        """Complete pipeline: SendGrid response -> Application model -> Database model (with automatic save)."""
+        # Step 1: Convert SendGrid response to EmailMessage application model
+        email_msg = sendgridEmailResponseHandler.from_response_dict(response_dict, headers_dict)
+        
+        # Step 2: Convert to database model and optionally save to Email table
+        handler = cls()
+        db_email = handler.save_email(email_msg, auto_commit=save_to_db)
+        
+        return email_msg, db_email
+    
+    @classmethod
+    def send_email_via_sendgrid(cls, to_email: str, subject: str, body: str, 
+                               from_email: str = "ian@hapticpaper.com", 
+                               save_to_db: bool = True) -> tuple[EmailMessage, dict]:
+        """
+        Send email via SendGrid using the application's message handling pattern.
+        
+        Args:
+            to_email (str): Recipient's email address
+            subject (str): Email subject
+            body (str): Email body content
+            from_email (str): Sender's email address (default configured)
+            save_to_db (bool): Whether to save to database
+            
+        Returns:
+            tuple[EmailMessage, dict]: Application model and response data
+        """
+        try:
+            from providers.sendgrid_email_connector import SendGridEmailConnector
+            
+            # Initialize SendGrid connector
+            connector = SendGridEmailConnector()
+            
+            # Send email through connector
+            email_msg, response_data = connector.send_email(
+                from_email=from_email,
+                to_email=to_email,
+                subject=subject,
+                content=body,
+                save_to_db=save_to_db
+            )
+            
+            # Close connector connection
+            connector.close_connection()
+            
+            logger_instance.info(
+                "Email sent successfully via SendGrid",
+                to=to_email,
+                subject=subject,
+                email_id=str(email_msg.id),
+                status=email_msg.status
+            )
+            
+            return email_msg, response_data
+            
+        except Exception as e:
+            logger_instance.error(f"Failed to send email via SendGrid: {str(e)}")
+            raise
+    
     def close_connection(self):
         """Close the database session."""
         if self.session:
             self.session.close()
-            l.info("Database session closed")
+            logger_instance.info("Database session closed")
 
     def __dict__(self):
         return {
