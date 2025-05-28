@@ -139,17 +139,17 @@ The setup script provides a **complete guided installation** with the following 
   - Smart credential update handling (keeps existing vs. updates)
 
 **5. Comprehensive Database Setup:**
-- 🗄️ **Docker Compose**: Optional PostgreSQL container startup
-- 📊 **Schema Creation**: Automatic table creation for messages and emails
-- ⚡ **Real-time Triggers**: PostgreSQL triggers for live updates via LISTEN/NOTIFY
-- 🧪 **Connection Testing**: Verifies database connectivity and table creation
-- 🔄 **Migration Support**: Handles existing databases gracefully
+- **Docker Compose**: Optional PostgreSQL container startup
+- **Schema Creation**: Automatic table creation for messages and emails
+- **Real-time Triggers**: PostgreSQL triggers for live updates via LISTEN/NOTIFY
+- **Connection Testing**: Verifies database connectivity and table creation
+- **Migration Support**: Handles existing databases gracefully
 
 **6. Complete Application Startup:**
-- 🚀 **Flask Server**: Optional automatic server startup in background
-- 🌐 **Browser Launch**: Cross-platform browser opening (macOS/Linux/Windows)
-- 📝 **Usage Instructions**: Clear next steps and usage guidance
-- 🎛️ **Process Management**: Server PID tracking for easy shutdown
+- **Flask Server**: Optional automatic server startup in background
+- **Browser Launch**: Cross-platform browser opening (macOS/Linux/Windows)
+- **Usage Instructions**: Clear next steps and usage guidance
+- **Process Management**: Server PID tracking for easy shutdown
 
 #### 🎮 Interactive Setup Experience
 
