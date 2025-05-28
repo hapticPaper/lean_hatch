@@ -388,7 +388,8 @@ INFLUXDB_BUCKET=messages
 ├── MONGO_PASSWORD         # MongoDB password (if enabled)
 ├── INFLUX_TOKEN          # InfluxDB token (if enabled)
 ├── INFLUXDB_PASSWORD     # InfluxDB password (if enabled)
-└── TWILIO_AUTH_TOKEN     # Twilio authentication token
+├── TWILIO_AUTH_TOKEN     # Twilio authentication token
+└── SENDGRID_API_KEY      # SendGrid API key for email functionality
 ```
 
 ### Docker Network
