@@ -180,8 +180,8 @@ if __name__ == "__main__":
     try:
         email_msg, response_data = connector.send_html_template(
             from_email="ian@hapticpaper.com",
-            to_email="rubenstein.ian@gmail.com",
-            subject="Start using hatch today!",
+            to_email="jim@polarcoordinates.org",
+            subject="buy me a pizza 🍕, lfgooooo",
             template_path="tests/html_email_compatible.html"
         )
         

@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils import logger
+logger_instance = logger
 
 import flask
 from flask import request, jsonify, render_template, send_from_directory, Response
@@ -11,6 +12,8 @@ from uuid import uuid4
 from sqlalchemy import text
 import queue
 import json
+import os
+import dotenv
 
 from data_model.application_model import twilioSMS, hatchMessage, MessageType
 from data_model.api_message_handler import APIMessageHandler
@@ -18,7 +21,13 @@ from providers.rest_connector import twilioAPI
 from db.postgres_connector import hatchPostgres
 from realtime import RealtimeUpdates
 
-logger_instance = logger
+
+dotenv.load_dotenv()
+dotenv_secrets = os.path.join(os.path.dirname(__file__), '..', '.secrets', '.secrets')
+dotenv.load_dotenv(dotenv_secrets, override=True)
+
+
+
 app = flask.Flask(__name__)
 
 # Initialize database connection
@@ -45,7 +54,7 @@ def get_conversations():
     Returns: List of conversations with conversation_id, participants, and last message date.
     """
     try:
-        session = pg.connect()
+        session = pg.start_connection()
         if not session:
             return jsonify({"error": "Database connection failed"}), 500
         
@@ -90,7 +99,7 @@ def get_conversation_messages(conversation_id):
     API endpoint to get all messages for a specific conversation.
     """
     try:
-        session = pg.connect()
+        session = pg.start_connection()
         if not session:
             return jsonify({"error": "Database connection failed"}), 500
         
@@ -146,7 +155,7 @@ def send_message():
         body = data['content']
         
         # Get conversation details to find the from_contact
-        session = pg.connect()
+        session = pg.start_connection()
         if not session:
             return jsonify({"error": "Database connection failed"}), 500
             
@@ -230,7 +239,7 @@ def get_new_messages(conversation_id):
         if not since_timestamp:
             return jsonify({"error": "Missing 'since' parameter"}), 400
         
-        session = pg.connect()
+        session = pg.start_connection()
         if not session:
             return jsonify({"error": "Database connection failed"}), 500
         

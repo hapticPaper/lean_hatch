@@ -37,6 +37,7 @@ A comprehensive messaging service application built with Python, Flask, PostgreS
 
 ```
 lean_hatch/
+├── setup.sh               # 🚀 Automated setup script (recommended!)
 ├── api/                    # Flask web application
 │   ├── api.py             # Main Flask app with REST endpoints
 │   ├── realtime.py        # Real-time updates via PostgreSQL LISTEN/NOTIFY
@@ -543,6 +544,20 @@ print('Database connection:', pg.test_connection())
    docker-compose up
    ```
 
+4. **Setup Script Issues**:
+   ```bash
+   # Make sure script is executable
+   chmod +x setup.sh
+   
+   # Run with bash explicitly
+   bash setup.sh
+   
+   # Check prerequisites
+   python3 --version
+   docker --version
+   docker-compose --version
+   ```
+
 ### Scaling and Production Considerations
 
 #### **Horizontal Scaling**:
@@ -610,13 +625,46 @@ SENDGRID_FROM_EMAIL=your_verified_sender@example.com
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### Quick Setup with Setup Script (Recommended)
+
+The easiest way to get started is using our automated setup script:
+
+```bash
+# Clone the repository
+git clone <repository>
+cd lean_hatch
+
+# Run the setup script
+./setup.sh
+```
+
+The setup script will:
+1. **Check prerequisites** (Python 3, Docker, Docker Compose)
+2. **Prompt for configuration** (database, Twilio, SendGrid credentials)
+3. **Create .env and .secrets files** automatically
+4. **Install Python dependencies**
+5. **Start PostgreSQL database** (optional)
+6. **Create database tables and triggers**
+7. **Start the application server** (optional)
+8. **Open the web interface** in your browser (optional)
+
+The script is interactive and will guide you through each step with helpful prompts and default values.
+
+### Manual Setup
+
+If you prefer to set up manually:
+
+### Manual Setup
+
+If you prefer to set up manually:
+
+#### Prerequisites
 - Python 3.11+
 - PostgreSQL 13+
 - Twilio Account (for SMS)
 - SendGrid Account (for Email)
 
-### Installation
+#### Installation
 ```bash
 # Clone and setup
 git clone <repository>

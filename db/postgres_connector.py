@@ -1,4 +1,3 @@
-
 from utils import *
 from data_model import hatchUser, MessageType, Message, SMSMessage, EmailMessage, User, modelMetaData, APIMessageHandler, dbEmail
 
@@ -20,8 +19,10 @@ dotenv.load_dotenv(dotenv_secrets, override=True)
 
 class hatchPostgres():
     def __init__(self):
-        self.engine = self.connect()
+        self.engine = None
+        self.session = None
         self.conn: Connection | None = None
+        self.start_connection()
 
     def get_database_url(self) -> str:
         """Retrieves the database URL from environment variables."""
@@ -36,10 +37,11 @@ class hatchPostgres():
     
 
 
-    def connect(self, debug=False):
+    def start_connection(self, debug=False):
         """Creates a PostgreSQL database engine and session."""
         try:
             db_url = self.get_database_url()
+            # Keep the engine as the actual SQLAlchemy engine
             self.engine = create_engine(f"{db_url}/{self.db_name}", future=True)
             
             # Create session
@@ -55,6 +57,13 @@ class hatchPostgres():
         except exc.OperationalError as e:
             l.error(f"Failed to connect to the PostgreSQL database: {e}")
             return None
+
+    def get_engine(self):
+        """Return the SQLAlchemy engine for raw connections."""
+        # Make sure we have connected first to initialize the engine
+        if not hasattr(self, 'engine') or self.engine is None:
+            self.start_connection()
+        return self.engine
 
     def create_tables(self):
         """Create all tables using ORM metadata (CREATE IF NOT EXISTS behavior)."""
@@ -72,14 +81,24 @@ class hatchPostgres():
             return False
     
     def create_database(self, database_name):
-        self.conn = self.connect()
+        # Use the engine to get a raw connection for database creation
+        if self.engine is None:
+            self.start_connection()
+        
+        if self.engine is None:
+            l.error("No engine available. Cannot create database.")
+            return False
+        
         try:
-            self.conn.execute(text(f"CREATE DATABASE {database_name}"))
+            with self.engine.connect() as conn:
+                conn.execute(text(f"CREATE DATABASE {database_name}"))
+                conn.commit()
             self.db_name = database_name
             l.info(f"Database '{self.db_name}' created successfully.")
-            return 
+            return True
         except exc.ProgrammingError as e:
-            l.error(f"Couldnt create database '{self.db_name}'",error=e)
+            l.error(f"Couldn't create database '{self.db_name}'", error=e)
+            return False
 
 
 
@@ -88,7 +107,7 @@ if __name__ == "__main__":
     pg = hatchPostgres()
     
     # Connect to the database
-    session = pg.connect(debug=True)
+    session = pg.start_connection(debug=True)
     
     if session is not None:
         # Create tables using ORM
