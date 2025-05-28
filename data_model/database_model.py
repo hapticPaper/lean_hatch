@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Uuid, DateTime, Float
 
 from sqlalchemy.orm import declarative_base
-from sqlalchemy.schema import MetaData
+from sqlalchemy.schema import MetaData, CreateSchema
 
 
 modelMetaData = MetaData(schema="public")
@@ -39,6 +39,6 @@ class Message(Base):
     date_updated = Column(DateTime)  # When message was last updated
 
     def __repr__(self):
-        return f"<Message(id={self.id}, from={self.from_contact}, to={self.to_contact}, content={self.body}, status={self.status}, sid={self.external_sid}, conversation_id={self.conversation_id})>"
+        return f"<Message(id={self.id}, from={self.from_contact}, to={self.to_contact}, content={self.body}, status={self.status}, sid={self.external_sid})>"
     
 

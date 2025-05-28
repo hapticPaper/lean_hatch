@@ -94,11 +94,12 @@ class RealtimeUpdates:
                     connection = psycopg2.connect(**conn_params)
                     connection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
                     
-                    # Set up LISTEN for message changes
+                    # Set up LISTEN for both message and conversation changes
                     cursor = connection.cursor()
                     cursor.execute("LISTEN message_changes;")
+                    cursor.execute("LISTEN conversation_changes;")
                     cursor.close()
-                    l.info("Successfully set up PostgreSQL LISTEN for message_changes")
+                    l.info("Successfully set up PostgreSQL LISTEN for message_changes and conversation_changes")
                 
                 # Check for notifications
                 connection.poll()
@@ -106,11 +107,19 @@ class RealtimeUpdates:
                     notify = connection.notifies.pop(0)
                     try:
                         payload = json.loads(notify.payload) if notify.payload else {}
-                        l.info("Received notification", payload=payload)
+                        l.info("Received notification", channel=notify.channel, payload=payload)
+                        
+                        # Determine the event type based on the channel
+                        if notify.channel == 'message_changes':
+                            event_type = 'message_update'
+                        elif notify.channel == 'conversation_changes':
+                            event_type = 'conversation_changes'
+                        else:
+                            event_type = 'unknown'
                         
                         # Broadcast to all connected clients
                         self._broadcast_update({
-                            'type': 'message_update',
+                            'type': event_type,
                             'conversation_id': payload.get('conversation_id'),
                             'action': payload.get('action'),  # 'INSERT', 'UPDATE', 'DELETE'
                             'message_id': payload.get('message_id'),

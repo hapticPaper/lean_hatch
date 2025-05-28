@@ -78,6 +78,9 @@ class twilioSMS(BaseModel):
     from_: str 
     body: str
     conversation_id: UUID | None = None
+    timestamp: datetime | None = None
+
+
     
     def __init__(self, **data):
         super().__init__(**data)

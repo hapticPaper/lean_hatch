@@ -12,7 +12,6 @@ from sqlalchemy import text
 import queue
 import json
 
-
 from data_model.application_model import twilioSMS, hatchMessage, MessageType
 from data_model.api_message_handler import APIMessageHandler
 from providers.rest_connector import twilioAPI
@@ -182,7 +181,6 @@ def send_message():
                 return jsonify({
                     "success": True,
                     "message_id": str(app_message.id),
-                    "conversation_id": str(app_message.conversation_id),
                     "status": app_message.status,
                     "method": "twilio"
                 }), 200
@@ -213,8 +211,6 @@ def send_message():
             
             return jsonify({
                 "success": True,
-                "message_id": str(message.id),
-                "conversation_id": str(message.conversation_id),
                 "status": "sent",
                 "method": "database"
             }), 200
