@@ -137,7 +137,7 @@ class twilioSMSResponseHandler(BaseModel):
             price=price,
             price_unit=response_dict.get('price_unit', 'USD'),
             sid=response_dict.get('sid', ''),
-            status=response_dict.get('status', ''),
+            status=str(response_dict.get('status', '')),
             subresource_uris=response_dict.get('subresource_uris', {}),
             to=response_dict.get('to', ''),
             uri=response_dict.get('uri', '')
@@ -232,7 +232,7 @@ class APIMessageHandler:
         # Initialize database connection
         from db.postgres_connector import hatchPostgres
         self.pg = hatchPostgres()
-        self.session = self.pg.connect()
+        self.session = self.pg.start_connection()  # <-- fix here
         
         if self.session is None:
             raise Exception("Failed to establish database connection in APIMessageHandler")
@@ -526,4 +526,28 @@ class APIMessageHandler:
             "application_message": self.to_application_model,
             "database_message": self.save_message
         }
+
+
+    
+    """Handler for formatting conversation tuples into dicts for API responses."""
+
+    @staticmethod
+    def conversation_tuples_to_dicts(convs):
+        """
+        Convert a list of conversation tuples to a list of dicts.
+        Each tuple: (conversation_id, participants, last_message_date, message_count)
+        """
+        result = []
+        for row in convs:
+            ph = any(participant.startswith('+') for participant in row[1])
+            result.append({
+                "conversation_id": str(row[0]),
+                "reply_to": row[1],
+                "participants": row[2].replace("->", ' 📱 ' if ph else ' 👥 '),
+
+                "last_message_date": row[3].isoformat() if row[3] else None,
+                "message_count": row[4],
+                "has_phone_numbers": ph
+            })
+        return result
 

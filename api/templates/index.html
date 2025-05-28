@@ -992,16 +992,19 @@
                         minute: '2-digit'
                     })
                     : 'No date';
-                
-                // Use the participants string directly from PostgreSQL
+
+                // Use the participants string directly from the API response
+                // Cache the displayName for this conversation_id so it doesn't get duplicated
+                // (But the real fix is to not update participants on every message send!)
+
+                // Only use the original participants string
                 const displayName = conv.participants;
-                const phoneIndicator = conv.has_phone_numbers ? '📱' : '👥';
-                
+
                 return `
                     <div class="conversation-item" data-conversation-id="${conv.conversation_id}"
-                         data-participants="${conv.participants}">
+                         data-participants="${displayName}">
                         <div class="conversation-time">${time}</div>
-                        <div class="conversation-contact">${phoneIndicator} ${displayName}</div>
+                        <div class="conversation-contact">${displayName}</div>
                         <div class="conversation-preview">${conv.message_count} messages</div>
                     </div>
                 `;
@@ -1156,10 +1159,8 @@
                 input.disabled = true;
                 document.getElementById('sendButton').disabled = true;
 
-                // For simplicity, let's assume we're sending to the first participant in the string
-                // Split the participants string to get individual contacts
-                const participantsList = conversation.participants.split(', ');
-                const recipientContact = participantsList[0];
+                // Use the reply_to field for the recipient
+                const recipientContact = conversation.reply_to;
 
                 const response = await fetch('/api/send_message', {
                     method: 'POST',
@@ -1178,9 +1179,10 @@
                     input.value = '';
                     
                     // Add message to UI immediately (optimistic update)
-                    // For simplicity, assume we're the second participant sending to the first
-                    const participantsList = conversation.participants.split(', ');
-                    const senderContact = participantsList[1] || participantsList[0];
+                    // Use the reply_to as recipient, and the other participant as sender if available
+                    const senderContact = conversation.participants
+                        .split(' ')
+                        .filter(p => p !== recipientContact)[0] || recipientContact;
                     const newMessage = {
                         id: 'temp-' + Date.now(), // Temporary ID for optimistic update
                         body: content,

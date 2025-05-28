@@ -9,18 +9,18 @@ import flask
 from flask import request, jsonify, render_template, send_from_directory, Response
 from datetime import datetime
 from uuid import uuid4
-from sqlalchemy import text
-import queue
-import json
-import os
-import dotenv
-
-from data_model.application_model import twilioSMS, hatchMessage, MessageType
+from sqlalchemy import text, func, case
+from sqlalchemy.orm import joinedload
+from data_model.application_model import twilioSMS, hatchMessage, MessageType, SMSMessage, EmailMessage
+from data_model.database_model import Message,  User, dbEmail
 from data_model.api_message_handler import APIMessageHandler
 from providers.rest_connector import twilioAPI
 from db.postgres_connector import hatchPostgres
 from realtime import RealtimeUpdates
-
+import dotenv
+import os
+import queue
+import json
 
 dotenv.load_dotenv()
 dotenv_secrets = os.path.join(os.path.dirname(__file__), '..', '.secrets', '.secrets')
@@ -60,38 +60,44 @@ def get_conversations():
         session = pg.start_connection()
         if not session:
             return jsonify({"error": "Database connection failed"}), 500
-        
-        # Query to get conversations with latest message info
-        query = """
-        SELECT 
-            conversation_id,
-            MAX(timestamp) as last_message_date,
-            COUNT(*) as messages,
-            CASE WHEN direction = 'inbound-api' THEN CONCAT(from_contact, ', ',to_contact) ELSE CONCAT(to_contact, ', ',from_contact) END as participants
-        FROM messages 
-        GROUP BY conversation_id,4
-        ORDER BY last_message_date DESC
-        """
-        
-        result = session.execute(text(query))
-        conversations = []
-        
-        for row in result:
-            # Check if any participant is a phone number (split the participants string)
-            participants_list = row.participants.split(', ') if row.participants else []
-            has_phone_numbers = any(is_phone_number(p) for p in participants_list)
-            
-            conversations.append({
-                'conversation_id': str(row.conversation_id),
-                'participants': row.participants,  # Use the string directly from PostgreSQL
-                'last_message_date': row.last_message_date.isoformat() if row.last_message_date else None,
-                'message_count': row.messages,
-                'has_phone_numbers': has_phone_numbers
-            })
-        
+
+        # Get all conversations (grouped by conversation_id)
+        convs = (
+            session.query(
+                Message.conversation_id,
+                case(
+                    (Message.direction == 'inbound-api', Message.from_contact ),
+                    else_=(Message.to_contact )
+                ).label('reply_to'),
+                case(
+                    (Message.direction == 'inbound-api', Message.from_contact + '->' + Message.to_contact),
+                    else_=(Message.to_contact + '->' + Message.from_contact)
+                ).label('participants'),
+                func.max(Message.timestamp).label('last_message_date'),
+                func.count(Message.id).label('messages')
+            )
+            .group_by(
+                Message.conversation_id,
+                case(
+                    (Message.direction == 'inbound-api', Message.from_contact ),
+                    else_=(Message.to_contact )
+                ),
+                case(
+                    (Message.direction == 'inbound-api', Message.from_contact + '->' + Message.to_contact),
+                    else_=(Message.to_contact + '->' + Message.from_contact)
+                )
+            )
+            .order_by(func.max(Message.timestamp).desc())
+            .all()
+        )
         session.close()
-        return jsonify({"conversations": conversations}), 200
-        
+
+        conversation_response = APIMessageHandler.conversation_tuples_to_dicts(convs)
+
+
+       
+        return jsonify({"conversations": conversation_response}), 200
+
     except Exception as e:
         logger_instance.error("Failed to get conversations", error=str(e))
         return jsonify({"error": str(e)}), 500
@@ -105,21 +111,16 @@ def get_conversation_messages(conversation_id):
         session = pg.start_connection()
         if not session:
             return jsonify({"error": "Database connection failed"}), 500
-        
-        # Query to get all messages for this conversation
-        query = """
-        SELECT 
-            id, to_contact, from_contact, body, type, timestamp, status,
-            external_sid, direction, error_code, error_message
-        FROM messages 
-        WHERE conversation_id = :conversation_id
-        ORDER BY timestamp ASC
-        """
-        
-        result = session.execute(text(query), {"conversation_id": conversation_id})
+
+        # ORM: Get all messages for this conversation
+        messages_query = (
+            session.query(Message)
+            .filter(Message.conversation_id == conversation_id)
+            .order_by(Message.timestamp.asc())
+            .all()
+        )
         messages = []
-        
-        for row in result:
+        for row in messages_query:
             messages.append({
                 'id': str(row.id),
                 'to_contact': row.to_contact,
@@ -134,10 +135,10 @@ def get_conversation_messages(conversation_id):
                 'error_message': row.error_message,
                 'is_delivered': row.status in ['delivered', 'sent'] if row.status else False
             })
-        
+
         session.close()
         return jsonify({"messages": messages}), 200
-        
+
     except Exception as e:
         logger_instance.error("Failed to get conversation messages", error=str(e), conversation_id=conversation_id)
         return jsonify({"error": str(e)}), 500
@@ -152,81 +153,79 @@ def send_message():
         data = request.json
         if not data or not all(k in data for k in ('conversation_id', 'to', 'content')):
             return jsonify({"error": "Missing required fields: conversation_id, to, content"}), 400
-        
+
         conversation_id = data['conversation_id']
         to_contact = data['to']
         body = data['content']
-        
-        # Get conversation details to find the from_contact
+
+        # ORM: Get conversation details to find the from_contact
         session = pg.start_connection()
         if not session:
             return jsonify({"error": "Database connection failed"}), 500
-            
-        query = """
-        SELECT DISTINCT from_contact, to_contact
-        FROM messages 
-        WHERE conversation_id = :conversation_id
-        LIMIT 1
-        """
-        
-        result = session.execute(text(query), {"conversation_id": conversation_id})
-        conv_row = result.fetchone()
+
+        conv_row = (
+            session.query(Message)
+            .filter(Message.conversation_id == conversation_id)
+            .first()
+        )
         session.close()
-        
+
         if not conv_row:
             return jsonify({"error": "Conversation not found"}), 404
-            
+
         # Determine from_contact (the contact that's not the to_contact)
         from_contact = conv_row.from_contact if conv_row.to_contact == to_contact else conv_row.to_contact
-        
+
         # Check if both contacts are phone numbers
         if is_phone_number(to_contact) and is_phone_number(from_contact):
             # Send via Twilio
             logger_instance.info("Sending SMS via Twilio", to=to_contact, from_=from_contact)
-            
-            sms = twilioSMS(to=to_contact, from_=from_contact, body=body)
+
             twilio_client = twilioAPI()
-            
+            sms = twilioSMS(to=to_contact, from_=from_contact, body=body)
+
             try:
                 app_message, header = twilio_client.send_sms(sms)
-                
+
                 return jsonify({
                     "success": True,
                     "message_id": str(app_message.id),
                     "status": app_message.status,
                     "method": "twilio"
                 }), 200
-                
+
             except Exception as twilio_error:
                 logger_instance.error("Twilio SMS failed", error=str(twilio_error))
                 return jsonify({"error": f"Failed to send SMS: {str(twilio_error)}"}), 500
-        
+
         else:
             # Save directly to database (name-based conversation)
             logger_instance.info("Saving message directly to database", to=to_contact, from_=from_contact)
-            
+
             # Create a hatchMessage directly
-            message = hatchMessage(
+            message = Message(
                 id=uuid4(),
                 to_contact=to_contact,
                 from_contact=from_contact,
                 body=body,
                 type=MessageType.SMS,
                 timestamp=datetime.now(),
-                status="sent"
+                status="sent",
+                conversation_id=conversation_id
             )
-            
-            # Save to database
-            handler = APIMessageHandler()
-            handler.save_message(message, auto_commit=True)
-            handler.close_connection()
-            
+
+            # Save to database using ORM
+            session = pg.start_connection()
+            session.add(message)
+            session.commit()
+            session.close()
+
             return jsonify({
                 "success": True,
                 "status": "sent",
                 "method": "database"
             }), 200
-        
+
     except Exception as e:
         logger_instance.error("Failed to send message", error=str(e))
         return jsonify({"error": str(e)}), 500
@@ -241,29 +240,24 @@ def get_new_messages(conversation_id):
         since_timestamp = request.args.get('since')
         if not since_timestamp:
             return jsonify({"error": "Missing 'since' parameter"}), 400
-        
+
         session = pg.start_connection()
         if not session:
             return jsonify({"error": "Database connection failed"}), 500
-        
-        # Query for messages newer than the given timestamp
-        query = """
-        SELECT 
-            id, to_contact, from_contact, body, type, timestamp, status,
-            external_sid, direction, error_code, error_message
-        FROM messages 
-        WHERE conversation_id = :conversation_id 
-        AND timestamp > :since_timestamp
-        ORDER BY timestamp ASC
-        """
-        
-        result = session.execute(text(query), {
-            "conversation_id": conversation_id,
-            "since_timestamp": since_timestamp
-        })
-        
+
+        # ORM: Query for messages newer than the given timestamp
+        messages_query = (
+            session.query(Message)
+            .filter(
+                Message.conversation_id == conversation_id,
+                Message.timestamp > since_timestamp
+            )
+            .order_by(Message.timestamp.asc())
+            .all()
+        )
+
         messages = []
-        for row in result:
+        for row in messages_query:
             messages.append({
                 'id': str(row.id),
                 'to_contact': row.to_contact,
@@ -278,10 +272,10 @@ def get_new_messages(conversation_id):
                 'error_message': row.error_message,
                 'is_delivered': row.status in ['delivered', 'sent'] if row.status else False
             })
-        
+
         session.close()
         return jsonify({"messages": messages}), 200
-        
+
     except Exception as e:
         logger_instance.error("Failed to get new messages", error=str(e), conversation_id=conversation_id)
         return jsonify({"error": str(e)}), 500
