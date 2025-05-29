@@ -174,12 +174,12 @@ INFLUXDB_BUCKET=messages
 
 #### **Required Secrets** (`.secrets/` directory):
 ```bash
-.secrets/
-├── POSTGRES_PASSWORD      # PostgreSQL password
-├── MONGO_PASSWORD         # MongoDB password (if enabled)
-├── INFLUX_TOKEN          # InfluxDB token (if enabled)
-├── INFLUXDB_PASSWORD     # InfluxDB password (if enabled)
-└── TWILIO_AUTH_TOKEN     # Twilio authentication token
+TWILIO_SECRET = ""
+TWILIO_TEST_SECRET = ""
+POSTGRES_PASSWORD=
+MONGO_PASSWORD=
+INFLUXDB_TOKEN = ""
+SENDGRID_TOKEN=""
 ```
 
 
