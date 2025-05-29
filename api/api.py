@@ -16,7 +16,7 @@ from sqlalchemy import text, func, case
 
 from data_model.application_model import twilioSMS, hatchMessage, MessageType, SMSMessage, EmailMessage
 from data_model.database_model import Message,  User, dbEmail
-from data_model.api_message_handler import APIMessageHandler
+from data_model.api_message_handler import APIMessageHandler, generate_conversation_id
 from providers.rest_connector import twilioAPI
 from db.postgres_connector import hatchPostgres
 
@@ -154,7 +154,7 @@ def send_message():
         to_contact = data['to']
         from_contact = data['from']
         body = data['body']
-        conversation_id = data.get('conversation_id', str(uuid4()))
+        conversation_id = generate_conversation_id(data['to'], data['from'])
 
         if is_phone_number(to_contact):
             # Send via Twilio

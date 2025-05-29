@@ -9,3 +9,4 @@
 /tests/t_test.py
 
 .conda/
+__pycache__/*

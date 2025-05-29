@@ -11,14 +11,19 @@ python -m pip install -r requirements.txt
 
 docker-compose up -d 
 
-python api/api.py
+python app.py
 ```
 
+The api can be tested by running
+```bash
+pytest pytests.py
+```
 
+It tests 3 endpoints:
 
-
-
-
+- `http://{FLASK_HOST}:{FLASK_PORT}/api/send_email`
+- `http://{FLASK_HOST}:{FLASK_PORT}/api/send_message`
+- `http://{FLASK_HOST}:{FLASK_PORT}/api/conversations`
 
 A comprehensive messaging service application built with Python, Flask, PostgreSQL, Twilio SMS integration, and SendGrid email functionality. Features real-time updates, structured logging, a modern web interface, and email composition with countdown timers.
 
@@ -31,12 +36,12 @@ A comprehensive messaging service application built with Python, Flask, PostgreS
 │   Web Frontend  │    │   Flask API      │    │   PostgreSQL    │
 │   (HTML/JS)     │◄──►│   (REST + SSE)   │◄──►│   Database      │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
-                               │                         │
-                               ▼                         ▼
-                       ┌──────────────┐         ┌─────────────────┐
-                       │   Twilio     │         │   Real-time     │
-                       │   SMS API    │         │   Triggers      │
-                       └──────────────┘         └─────────────────┘
+                               │                    
+                               ▼                          
+                       ┌──────────────┐         
+                       │   Twilio     │         
+                       │   SMS API    │        
+                       └──────────────┘       
                                │
                                ▼
                        ┌──────────────┐
@@ -57,10 +62,13 @@ A comprehensive messaging service application built with Python, Flask, PostgreS
 
 ```
 lean_hatch/
-├── setup.sh               # 🚀 Automated setup script (recommended!)
+├── app.py                 # Main application entry point
+├── pytests.py            # Pytest test suite for API endpoints
+├── requirements.txt      # Python dependencies
+├── docker-compose.yaml   # Docker services configuration
+│
 ├── api/                    # Flask web application
 │   ├── api.py             # Main Flask app with REST endpoints
-│   ├── realtime.py        # Real-time updates via PostgreSQL LISTEN/NOTIFY
 │   └── templates/
 │       └── index.html     # Web interface with messaging UI and email composer
 │
@@ -80,12 +88,10 @@ lean_hatch/
 │   ├── logger_config.py        # Structured logging with Rich
 │   └── exceptions.py           # Custom exception classes
 │
-├── tests/                 # Test files and templates
-│   ├── html_email_compatible.html  # Email-client-compatible template
-│   └── test_email_system.py       # Email system test script
-│
-└── sql/                   # Database scripts
-    └── realtime_triggers.sql   # PostgreSQL triggers for real-time updates
+└── tests/                 # Test files and templates
+    ├── html_email_compatible.html  # Email-client-compatible template
+    └── test_email_system.py       # Email system test script
+
 ```
 
 
@@ -226,7 +232,7 @@ Email Modal ────► Flask API ────► SendGrid Connector ──�
 | `/api/conversation/<id>/messages` | GET | Get messages for conversation | `{messages: [...]}` |
 | `/api/send_message` | POST | Send new message | `{success: true, message_id: "..."}` |
 | `/api/send_email` | POST | Send email via SendGrid | `{success: true, email_id: "..."}` |
-| `/api/events` | GET | Server-Sent Events stream | `text/event-stream` |
+
 
 
 ## 📧 Email System
@@ -244,10 +250,6 @@ Content-Type: application/json
   "body": "Your message content"
 }
 ```
-
-
-
-
 **Template Location**: `tests/html_email_compatible.html`
 
 ### SendGrid Integration
@@ -302,9 +304,6 @@ from db.postgres_connector import hatchPostgres
 pg = hatchPostgres()
 pg.create_tables()
 "
-
-# Apply real-time triggers
-docker-compose exec db psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /app/sql/realtime_triggers.sql
 ```
 
 

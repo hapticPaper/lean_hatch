@@ -8,3 +8,4 @@ colorama
 flask
 dotenv
 psycopg2
+pytest
