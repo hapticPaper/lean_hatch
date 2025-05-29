@@ -198,7 +198,6 @@ pg.create_tables()
    - Phone numbers → Twilio SMS
    - Names → Database only
 4. **Send emails**: Click "Compose Email" button for modal popup
-5. **Real-time updates**: Messages appear instantly (emails stored separately)
 
 ### Debugging
 
