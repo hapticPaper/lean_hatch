@@ -58,9 +58,7 @@ lean_hatch/
 │   └── exceptions.py           # Custom exception classes
 │
 └── tests/                 # Test files and templates
-    ├── html_email_compatible.html  # Email-client-compatible template
-    └── test_email_system.py       # Email system test script
-
+    
 ```
 
 
