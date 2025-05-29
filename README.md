@@ -11,6 +11,8 @@ python -m pip install -r requirements.txt
 
 docker-compose up -d 
 
+python db/postgres_connector.py ## Running this as main will ensure the messages and email tables are created from the ORM. 
+
 python app.py
 ```
 
@@ -180,61 +182,12 @@ INFLUXDB_BUCKET=messages
 └── TWILIO_AUTH_TOKEN     # Twilio authentication token
 ```
 
-#### ** Database Initialization**:
-```bash
-# After starting containers, initialize the database
-docker-compose exec app python -c "
-from db.postgres_connector import hatchPostgres
-pg = hatchPostgres()
-pg.create_tables()
-"
-```
 
 
-### Usage
+### Fronted as api testing:
 1. **Access web interface**: http://localhost:5000
 2. **View conversations**: Automatically loads from database
 3. **Send messages**: 
    - Phone numbers → Twilio SMS
    - Names → Database only
 4. **Send emails**: Click "Compose Email" button for modal popup
-
-### Debugging
-
-#### 1. **Logging**
-- **Structured logging** with Rich formatting
-- **Log levels**: DEBUG, INFO, WARNING, ERROR
-- **Context**: All logs include module, function, and line number
-
-#### 2. **Real-time Issues**
-- Check PostgreSQL triggers: `SELECT * FROM information_schema.triggers WHERE trigger_name = 'messages_notify_trigger';`
-- Monitor SSE connections: Look for "Added/Removed SSE client" logs
-- Test notifications: `NOTIFY message_changes, '{"test": true}';`
-
-#### 3. **Database Issues**
-- Connection problems: Check `.secrets/.secrets` configuration
-- Query debugging: Enable SQLAlchemy logging
-- Schema issues: Verify with `\d messages` in psql
-
-## 🧪 Testing
-
-### Manual Testing
-```bash
-# Test API endpoints
-curl http://localhost:5002/api/conversations
-curl http://localhost:5002/api/conversation/<id>/messages
-
-# Test email endpoint
-curl -X POST http://localhost:5002/api/send_email \
-  -H "Content-Type: application/json" \
-  -d '{"to_email": "test@example.com", "subject": "Test", "body": "Test message"}'
-
-# Test SSE connection
-curl -N http://localhost:5002/api/events
-
-# Test database triggers
-psql -d hatchapp -c "INSERT INTO messages (...) VALUES (...);"
-
-# Test email system
-python3 tests/test_email_system.py
-```
