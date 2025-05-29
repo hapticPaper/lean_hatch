@@ -4,23 +4,22 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils import logger
 logger_instance = logger
-
+import os
+import dotenv
+import json
 import flask
 from flask import request, jsonify, render_template, send_from_directory, Response
 from datetime import datetime
 from uuid import uuid4
 from sqlalchemy import text, func, case
-from sqlalchemy.orm import joinedload
+
+
 from data_model.application_model import twilioSMS, hatchMessage, MessageType, SMSMessage, EmailMessage
 from data_model.database_model import Message,  User, dbEmail
 from data_model.api_message_handler import APIMessageHandler
 from providers.rest_connector import twilioAPI
 from db.postgres_connector import hatchPostgres
-from realtime import RealtimeUpdates
-import dotenv
-import os
-import queue
-import json
+
 
 dotenv.load_dotenv()
 dotenv_secrets = os.path.join(os.path.dirname(__file__), '..', '.secrets', '.secrets')
@@ -36,12 +35,6 @@ app = flask.Flask(__name__)
 # Initialize database connection
 pg = hatchPostgres()
 
-# Initialize realtime updates with the PostgreSQL connector instance
-realtime_updates = RealtimeUpdates(pg)
-
-def is_phone_number(contact: str) -> bool:
-    """Check if a contact string is a phone number (starts with +)."""
-    return contact.startswith('+')
 
 @app.route('/', methods=['GET'])
 def index():
@@ -146,35 +139,19 @@ def get_conversation_messages(conversation_id):
 @app.route('/api/send_message', methods=['POST'])
 def send_message():
     """
-    API endpoint to send a new message in a conversation.
-    Handles both phone number conversations (via Twilio) and name-based conversations (database only).
+    Straight API endpoint to send a message.
+    Expects: to, from, body in JSON payload.
+    Sends via Twilio if both are phone numbers, otherwise saves to database.
     """
     try:
         data = request.json
-        if not data or not all(k in data for k in ('conversation_id', 'to', 'content')):
-            return jsonify({"error": "Missing required fields: conversation_id, to, content"}), 400
+        if not data or not all(k in data for k in ('to', 'from', 'body')):
+            return jsonify({"error": "Missing required fields: to, from, body"}), 400
 
-        conversation_id = data['conversation_id']
         to_contact = data['to']
-        body = data['content']
-
-        # ORM: Get conversation details to find the from_contact
-        session = pg.start_connection()
-        if not session:
-            return jsonify({"error": "Database connection failed"}), 500
-
-        conv_row = (
-            session.query(Message)
-            .filter(Message.conversation_id == conversation_id)
-            .first()
-        )
-        session.close()
-
-        if not conv_row:
-            return jsonify({"error": "Conversation not found"}), 404
-
-        # Determine from_contact (the contact that's not the to_contact)
-        from_contact = conv_row.from_contact if conv_row.to_contact == to_contact else conv_row.to_contact
+        from_contact = data['from']
+        body = data['body']
+        conversation_id = data.get('conversation_id', str(uuid4()))
 
         # Check if both contacts are phone numbers
         if is_phone_number(to_contact) and is_phone_number(from_contact):
@@ -186,7 +163,6 @@ def send_message():
 
             try:
                 app_message, header = twilio_client.send_sms(sms)
-
                 return jsonify({
                     "success": True,
                     "message_id": str(app_message.id),
@@ -199,10 +175,9 @@ def send_message():
                 return jsonify({"error": f"Failed to send SMS: {str(twilio_error)}"}), 500
 
         else:
-            # Save directly to database (name-based conversation)
+            # Save directly to database
             logger_instance.info("Saving message directly to database", to=to_contact, from_=from_contact)
 
-            # Create a hatchMessage directly
             message = Message(
                 id=uuid4(),
                 to_contact=to_contact,
@@ -211,10 +186,10 @@ def send_message():
                 type=MessageType.SMS,
                 timestamp=datetime.now(),
                 status="sent",
-                conversation_id=conversation_id
+                conversation_id=conversation_id,
+                direction="outbound-api"
             )
 
-            # Save to database using ORM
             session = pg.start_connection()
             session.add(message)
             session.commit()
@@ -222,6 +197,7 @@ def send_message():
 
             return jsonify({
                 "success": True,
+                "message_id": str(message.id),
                 "status": "sent",
                 "method": "database"
             }), 200
@@ -229,6 +205,7 @@ def send_message():
     except Exception as e:
         logger_instance.error("Failed to send message", error=str(e))
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/conversation/<conversation_id>/new_messages', methods=['GET'])
 def get_new_messages(conversation_id):
@@ -287,41 +264,6 @@ def health_check():
     """
     return jsonify({"status": "ok"}), 200
 
-@app.route('/api/events')
-def stream_events():
-    """
-    Server-Sent Events endpoint for real-time updates
-    """
-    def event_generator():
-        client_queue = queue.Queue()
-        realtime_updates.add_client(client_queue)
-        
-        try:
-            # Send initial connection message
-            yield f"data: {json.dumps({'type': 'connected', 'timestamp': datetime.now().isoformat()})}\n\n"
-            
-            while True:
-                try:
-                    # Get message from queue with timeout
-                    message = client_queue.get(timeout=30)  # 30 second keepalive
-                    yield message
-                except queue.Empty:
-                    # Send keepalive
-                    yield f"data: {json.dumps({'type': 'keepalive', 'timestamp': datetime.now().isoformat()})}\n\n"
-                except GeneratorExit:
-                    break
-        finally:
-            realtime_updates.remove_client(client_queue)
-    
-    return Response(
-        event_generator(),
-        mimetype='text/event-stream',
-        headers={
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-            'Access-Control-Allow-Origin': '*'
-        }
-    )
 
 @app.route('/favicon.ico', methods=['GET'])
 def favicon():

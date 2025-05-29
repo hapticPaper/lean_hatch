@@ -4,3 +4,7 @@ pydantic
 requests
 sqlalchemy
 twilio
+colorama
+flask
+dotenv
+psycopg2

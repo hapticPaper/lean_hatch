@@ -7,3 +7,5 @@
 /pgdata/
 /.secrets/
 /tests/t_test.py
+
+.conda/
