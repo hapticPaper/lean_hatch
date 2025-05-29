@@ -85,7 +85,7 @@ User Input → Flask API → Data Models → Database
 
 
 #### 1. **Application Models** (`application_model.py`)
-- **Key Models**:
+
   ```python
   class hatchMessage(BaseModel):
       id: UUID4
@@ -140,9 +140,8 @@ User Input → Flask API → Data Models → Database
 - `emails` - Email records with SendGrid integration
 
 
-#### 3. Handlers
-<br>
-`data_model\api_message_handler.py` handles conversions between datamodels and postgres writes. 
+#### 3. Handlers (`data_model\api_message_handler.py`)
+handles conversions between datamodels and postgres writes. 
 
 **Conversation IDs**<br>
  Groups messages between same participants<br>
