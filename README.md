@@ -172,7 +172,7 @@ INFLUXDB_ORGANIZATION=hatch
 INFLUXDB_BUCKET=messages
 ```
 
-#### **Required Secrets** (`.secrets/` directory):
+#### **Required Secrets** (`.secrets/.secrets`):
 ```bash
 TWILIO_SECRET = ""
 TWILIO_TEST_SECRET = ""
