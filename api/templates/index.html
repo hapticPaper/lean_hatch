@@ -781,7 +781,6 @@
         let currentConversationId = null;
         let conversations = [];
         let currentMessages = [];
-        let eventSource = null;
         let lastMessageTimestamp = null;
 
         // Phase 1: Initialize the application
@@ -802,9 +801,6 @@
                 
                 // Set up event listeners
                 setupEventListeners();
-                
-                // Start real-time updates
-                startEventSource();
                 
             } catch (error) {
                 console.error('Failed to initialize app:', error);
@@ -909,8 +905,6 @@
 
             // Load messages for this conversation
             await loadMessages(conversationId);
-            
-            // Real-time updates will handle new messages via SSE
         }
 
         async function loadMessages(conversationId) {
@@ -928,7 +922,7 @@
                 console.log('Current messages count:', currentMessages.length);
                 renderMessages();
                 
-                // Update last message timestamp for real-time updates
+                // Store last message timestamp
                 if (currentMessages.length > 0) {
                     lastMessageTimestamp = currentMessages[currentMessages.length - 1].timestamp;
                 }
@@ -1022,8 +1016,9 @@
                     },
                     body: JSON.stringify({
                         conversation_id: currentConversationId,
+                        from: recipientContact[0] == "+" ? '+18333450761' : 'Alice', // Use the first participant as sender
                         to: recipientContact,
-                        content: content
+                        body: content
                     })
                 });
 
@@ -1050,8 +1045,6 @@
                     
                     // Update conversation list
                     updateConversationPreview(currentConversationId, content);
-                    
-                    // Real-time updates will handle message delivery status via SSE
                     
                 } else {
                     throw new Error('Failed to send message');
@@ -1100,9 +1093,7 @@
 
         // Cleanup on page unload
         window.addEventListener('beforeunload', function() {
-            if (eventSource) {
-                eventSource.close();
-            }
+            // No cleanup needed without event source
         });
 
         // Email Modal Functions

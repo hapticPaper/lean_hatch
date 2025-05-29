@@ -136,6 +136,9 @@ def get_conversation_messages(conversation_id):
         logger_instance.error("Failed to get conversation messages", error=str(e), conversation_id=conversation_id)
         return jsonify({"error": str(e)}), 500
 
+
+
+
 @app.route('/api/send_message', methods=['POST'])
 def send_message():
     """
@@ -153,8 +156,7 @@ def send_message():
         body = data['body']
         conversation_id = data.get('conversation_id', str(uuid4()))
 
-        # Check if both contacts are phone numbers
-        if is_phone_number(to_contact) and is_phone_number(from_contact):
+        if is_phone_number(to_contact):
             # Send via Twilio
             logger_instance.info("Sending SMS via Twilio", to=to_contact, from_=from_contact)
 
@@ -264,6 +266,9 @@ def health_check():
     """
     return jsonify({"status": "ok"}), 200
 
+
+def is_phone_number(contact)-> bool:
+    return contact.startswith('+')  
 
 @app.route('/favicon.ico', methods=['GET'])
 def favicon():
