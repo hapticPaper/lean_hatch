@@ -79,33 +79,10 @@ lean_hatch/
 ```
 User Input → Flask API → Data Models → Database 
 ```
-### Data Flow
 
-```
-Twilio JSON ──► hatchMessage ──► Message (DB)
-     │              │              │
-     │              │              ▼
-     │              │         conversation_id
-     │              │         (generated from participants)
-     │              │
-     ▼              ▼
-twilioSMS ────► APIMessageHandler ────► PostgreSQL
-```
-
-```
-Email Composer ──► SendGrid API ──► EmailMessage ──► Email (DB)
-     │                    │             │             │
-     │                    │             │             ▼
-     │                    │             │        email_id
-     │                    │             │        (UUID)
-     │                    │             │
-     ▼                    ▼             ▼
-Email Modal ────► Flask API ────► SendGrid Connector ────► PostgreSQL
-```
 
 ## 📊 Data Models
 
-### Core Models
 
 #### 1. **Application Models** (`application_model.py`)
 - **Key Models**:
@@ -154,9 +131,6 @@ Email Modal ────► Flask API ────► SendGrid Connector ──�
   ```
 
 #### 2. **Database Models** (`database_model.py`)
-- **Purpose**: ORM mapping and database schema
-- **Technology**: SQLAlchemy with PostgreSQL
-- **Key Features**:
   - Auto-generated UUIDs
   - Conversation grouping via `conversation_id` (messages)
   - Provider-specific fields for external service responses
@@ -165,9 +139,14 @@ Email Modal ────► Flask API ────► SendGrid Connector ──�
 - `messages` - SMS/chat messages with conversation grouping
 - `emails` - Email records with SendGrid integration
 
-#### 3. **Conversation ID Generation**
+
+#### 3. Handlers
+<br>
+`data_model\api_message_handler.py` handles conversions between datamodels and postgres writes. 
+
+**Conversation IDs**<br>
+ Groups messages between same participants<br>
 - **Algorithm**: SHA256 hash of sorted participant IDs → UUID
-- **Purpose**: Groups messages between same participants
 - **Implementation**:
   ```python
   def generate_conversation_id(participant1: str, participant2: str) -> UUID:
