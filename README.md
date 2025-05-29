@@ -1,4 +1,4 @@
-# Hatch - Real-time Messaging Service
+# Hatch Messaging Service
 
 ## Quickstart
 
