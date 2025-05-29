@@ -131,10 +131,6 @@ User Input → Flask API → Data Models → Database
   ```
 
 #### 2. **Database Models** (`database_model.py`)
-  - Auto-generated UUIDs
-  - Conversation grouping via `conversation_id` (messages)
-  - Provider-specific fields for external service responses
-
 **Tables:**
 - `messages` - SMS/chat messages with conversation grouping
 - `emails` - Email records with SendGrid integration
