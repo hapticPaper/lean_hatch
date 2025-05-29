@@ -50,14 +50,6 @@ An API built with Python, Flask, Pydantic, SQLAlchemy, PostgreSQL supporting Twi
                        └──────────────┘
 ```
 
-### Real-time Updates Flow
-
-1. **Message Creation** → Database INSERT/UPDATE
-2. **PostgreSQL Triggers** → Send NOTIFY to `message_changes` channel
-3. **Real-time Listener** → Receives notification via `psycopg2`
-4. **Server-Sent Events** → Broadcasts update to web clients
-5. **Frontend** → Automatically updates UI without polling
-
 ## 📁 Project Structure
 
 ```
@@ -95,25 +87,24 @@ lean_hatch/
 ```
 
 
+## 🔌 API Endpoints
+
+### REST API (`/api/...`)
+
+| Endpoint | Method | Purpose | Response |
+|----------|---------|---------|----------|
+| `/api/conversations` | GET | List all conversations | `{conversations: [...]}` |
+| `/api/conversation/<id>/messages` | GET | Get messages for conversation | `{messages: [...]}` |
+| `/api/send_message` | POST | Send new message | `{success: true, message_id: "..."}` |
+| `/api/send_email` | POST | Send email via SendGrid | `{success: true, email_id: "..."}` |
+
+
 ## 🔄 Module Interactions
 
-### 1. Message Flow Architecture
-
 ```
-User Input → Flask API → Data Models → Database → Real-time Updates → Frontend
+User Input → Flask API → Data Models → Database 
 ```
-
-**Detailed Flow:**
-1. **User sends message/email** via web interface
-2. **Flask API** (`api.py`) receives REST request
-3. **Message Handler** (`api_message_handler.py`) converts formats:
-   - JSON → Pydantic models → SQLAlchemy models
-4. **Database** stores message/email with auto-generated `conversation_id`
-5. **PostgreSQL triggers** send NOTIFY event (messages only)
-6. **Real-time module** broadcasts to connected clients (messages only)
-7. **Frontend** receives SSE event and updates UI
-
-### 2. Data Model Relationships
+### Data Flow
 
 ```
 Twilio JSON ──► hatchMessage ──► Message (DB)
@@ -126,8 +117,6 @@ Twilio JSON ──► hatchMessage ──► Message (DB)
 twilioSMS ────► APIMessageHandler ────► PostgreSQL
 ```
 
-### 3. Email System Architecture
-
 ```
 Email Composer ──► SendGrid API ──► EmailMessage ──► Email (DB)
      │                    │             │             │
@@ -138,15 +127,6 @@ Email Composer ──► SendGrid API ──► EmailMessage ──► Email (DB
      ▼                    ▼             ▼
 Email Modal ────► Flask API ────► SendGrid Connector ────► PostgreSQL
 ```
-
-**Email Flow:**
-1. **User opens email composer** via modal popup
-2. **Email form submission** sends data to `/api/send_email`
-3. **APIMessageHandler** processes email request
-4. **SendGrid Connector** sends email via SendGrid API
-5. **Database** stores email record with provider response
-6. **Success/Error feedback** displayed with countdown timer
-7. **Modal auto-closes** after 5-second countdown
 
 ## 📊 Data Models
 
@@ -221,51 +201,6 @@ Email Modal ────► Flask API ────► SendGrid Connector ──�
       hash_digest = hashlib.sha256(hash_input.encode()).hexdigest()
       return UUID(hash_digest[:32])
   ```
-
-## 🔌 API Endpoints
-
-### REST API (`/api/...`)
-
-| Endpoint | Method | Purpose | Response |
-|----------|---------|---------|----------|
-| `/api/conversations` | GET | List all conversations | `{conversations: [...]}` |
-| `/api/conversation/<id>/messages` | GET | Get messages for conversation | `{messages: [...]}` |
-| `/api/send_message` | POST | Send new message | `{success: true, message_id: "..."}` |
-| `/api/send_email` | POST | Send email via SendGrid | `{success: true, email_id: "..."}` |
-
-
-
-## 📧 Email System
-
-### Email API
-
-**Send Email Endpoint:**
-```http
-POST /api/send_email
-Content-Type: application/json
-
-{
-  "to_email": "recipient@example.com",
-  "subject": "Your Subject",
-  "body": "Your message content"
-}
-```
-**Template Location**: `tests/html_email_compatible.html`
-
-### SendGrid Integration
-
-**Provider Configuration:**
-- **Service**: SendGrid API v3
-- **Authentication**: API key via environment variables
-- **Templates**: HTML template injection
-- **Response Tracking**: Provider responses stored in database
-
-**Database Storage:**
-- **Separate Table**: Emails stored in dedicated `emails` table
-- **Provider Data**: SendGrid message IDs and responses saved
-- **Metadata**: CC, BCC, reply-to, attachments support
-
-
 
 ### Environment Configuration
 
@@ -355,42 +290,3 @@ psql -d hatchapp -c "INSERT INTO messages (...) VALUES (...);"
 # Test email system
 python3 tests/test_email_system.py
 ```
-
-## 📚 Dependencies
-
-### Core Dependencies
-- **Flask**: Web framework and REST API
-- **SQLAlchemy**: ORM and database abstraction
-- **Pydantic**: Data validation and serialization
-- **psycopg2**: PostgreSQL adapter
-- **Twilio**: SMS service integration
-- **SendGrid**: Email service integration
-- **Rich**: Enhanced logging and formatting
-
----
-
-## 📧 Email Feature Details
-
-### Email vs Message Separation
-
-The application maintains clear separation between messaging and email functionality:
-
-**Messages Table:**
-- SMS and chat messages
-- Conversation grouping via `conversation_id`
-- Real-time updates via PostgreSQL triggers
-- Twilio integration for SMS delivery
-
-**Emails Table:**
-- Email records with full metadata
-- SendGrid integration for delivery
-- No real-time updates (separate workflow)
-- Provider response tracking
-
-### Email Development 
-
-1. **Template Updates**: Modify `tests/html_email_compatible.html`
-2. **Modal Styling**: Update CSS in `templates/index.html`
-3. **API Integration**: Extend `sendgrid_email_connector.py`
-4. **Database Schema**: Add fields to `dbEmail` in `database_model.py`
-5. **Error Handling**: Update response processing in `api_message_handler.py`
