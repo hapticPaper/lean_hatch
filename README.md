@@ -25,7 +25,7 @@ It tests 3 endpoints:
 - `http://{FLASK_HOST}:{FLASK_PORT}/api/send_message`
 - `http://{FLASK_HOST}:{FLASK_PORT}/api/conversations`
 
-A comprehensive messaging service application built with Python, Flask, PostgreSQL, Twilio SMS integration, and SendGrid email functionality. Features real-time updates, structured logging, a modern web interface, and email composition with countdown timers.
+An API built with Python, Flask, Pydantic, SQLAlchemy, PostgreSQL supporting Twilio SMS and SendGrid. 
 
 ## 🏗️ Architecture Overview
 
