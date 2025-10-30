@@ -27,7 +27,9 @@ It tests 3 endpoints:
 - `http://{FLASK_HOST}:{FLASK_PORT}/api/send_message`
 - `http://{FLASK_HOST}:{FLASK_PORT}/api/conversations`
 
-An API built with Python, Flask, Pydantic, SQLAlchemy, PostgreSQL supporting Twilio SMS and SendGrid. 
+An API built with Python, Flask, Pydantic, SQLAlchemy, PostgreSQL supporting Twilio SMS and SendGrid.
+
+**NEW:** Also includes an ETL utility package for schema-driven data transformation and parquet export with BigQuery compatibility.
 
 ## 📁 Project Structure
 
@@ -51,6 +53,15 @@ lean_hatch/
 ├── db/                    # Database connectivity
 │   └── postgres_connector.py   # PostgreSQL connection management
 │
+├── etl/                   # ETL utility package (NEW)
+│   ├── __init__.py        # Package exports
+│   ├── schema_loader.py   # JSON schema loading with pydantic
+│   ├── sql_types.py       # SQL type definitions and handlers
+│   ├── data_caster.py     # Type casting and validation
+│   ├── parquet_exporter.py # Parquet export with BigQuery compatibility
+│   ├── examples/          # Example schema definitions
+│   └── README.md          # ETL utility documentation
+│
 ├── providers/             # External service integrations
 │   ├── rest_connector.py       # Twilio SMS client
 │   └── sendgrid_email_connector.py  # SendGrid email client
@@ -60,6 +71,8 @@ lean_hatch/
 │   └── exceptions.py           # Custom exception classes
 │
 └── tests/                 # Test files and templates
+    ├── etl/               # ETL utility tests
+    └── ...                # Other test files
     
 ```
 
@@ -182,6 +195,60 @@ INFLUXDB_TOKEN = ""
 SENDGRID_TOKEN=""
 ```
 
+
+
+## ETL Utility Package
+
+lean_hatch now includes a powerful ETL utility package for data transformation and export operations.
+
+### Features
+
+- **Schema-driven data validation** using JSON and pydantic
+- **SQL type support** (STRING, INTEGER, FLOAT, TIMESTAMP, BOOLEAN, etc.)
+- **Parquet export** with BigQuery compatibility
+- **Consistent timestamp handling** across pandas, parquet, and SQL
+- **Structured logging** support
+
+### Quick Example
+
+```python
+from etl import SchemaLoader, DataCaster, ParquetExporter
+import pandas as pd
+
+# Load schema from JSON
+schema = SchemaLoader.load_from_file('schema.json')
+
+# Cast your data to match the schema
+caster = DataCaster(schema)
+df = pd.DataFrame(your_data)
+casted_df = caster.cast_dataframe(df)
+
+# Export to parquet (BigQuery-ready)
+exporter = ParquetExporter(schema)
+exporter.export_dataframe(casted_df, 'output.parquet')
+```
+
+### Schema Example
+
+```json
+{
+  "name": "customer_data",
+  "columns": [
+    {"name": "customer_id", "type": "INTEGER", "mode": "REQUIRED"},
+    {"name": "name", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "signup_date", "type": "TIMESTAMP", "mode": "REQUIRED"},
+    {"name": "is_active", "type": "BOOLEAN", "mode": "NULLABLE"}
+  ]
+}
+```
+
+For complete documentation, see [etl/README.md](etl/README.md).
+
+### Testing the ETL Utility
+
+```bash
+python -m pytest tests/etl/test_etl_utility.py -v
+```
 
 
 ### Fronted as api testing:

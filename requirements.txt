@@ -9,3 +9,6 @@ flask
 dotenv
 psycopg2
 pytest
+pandas
+pyarrow
+google-cloud-bigquery
