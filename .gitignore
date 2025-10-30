@@ -1,7 +1,7 @@
 
 .vscode/
 .secrets/*
-*/__pycache__/*
+**/__pycache__/
 .env
 .DS_Store
 /pgdata/
@@ -9,7 +9,6 @@
 /tests/t_test.py
 
 .conda/
-__pycache__/*
 
 # ETL outputs
 *.parquet
