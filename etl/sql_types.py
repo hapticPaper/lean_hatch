@@ -35,16 +35,26 @@ class TypeHandler:
     """Handles type conversion for different SQL types."""
     
     @staticmethod
+    def _is_null(value: Any) -> bool:
+        """Check if value is null/NA, handling pandas and regular Python types."""
+        if value is None:
+            return True
+        try:
+            return pd.isna(value)
+        except (TypeError, ValueError):
+            return False
+    
+    @staticmethod
     def to_string(value: Any) -> str | None:
         """Convert value to string."""
-        if value is None or pd.isna(value):
+        if TypeHandler._is_null(value):
             return None
         return str(value)
     
     @staticmethod
     def to_integer(value: Any) -> int | None:
         """Convert value to integer."""
-        if value is None or (isinstance(value, float) and pd.isna(value)):
+        if TypeHandler._is_null(value):
             return None
         if isinstance(value, str) and value.strip() == '':
             return None
@@ -56,7 +66,7 @@ class TypeHandler:
     @staticmethod
     def to_float(value: Any) -> float | None:
         """Convert value to float."""
-        if value is None or (isinstance(value, float) and pd.isna(value)):
+        if TypeHandler._is_null(value):
             return None
         if isinstance(value, str) and value.strip() == '':
             return None
@@ -68,7 +78,7 @@ class TypeHandler:
     @staticmethod
     def to_boolean(value: Any) -> bool | None:
         """Convert value to boolean."""
-        if value is None or (isinstance(value, float) and pd.isna(value)):
+        if TypeHandler._is_null(value):
             return None
         if isinstance(value, str):
             value_lower = value.lower().strip()
@@ -87,7 +97,7 @@ class TypeHandler:
         This ensures consistent timestamp handling across parquet and BigQuery.
         BigQuery expects UTC timestamps, and parquet handles pandas Timestamps well.
         """
-        if value is None or (isinstance(value, float) and pd.isna(value)):
+        if TypeHandler._is_null(value):
             return None
         if isinstance(value, str) and value.strip() == '':
             return None
@@ -102,7 +112,7 @@ class TypeHandler:
     @staticmethod
     def to_datetime(value: Any) -> datetime | None:
         """Convert value to datetime."""
-        if value is None or (isinstance(value, float) and pd.isna(value)):
+        if TypeHandler._is_null(value):
             return None
         if isinstance(value, str) and value.strip() == '':
             return None
@@ -117,7 +127,7 @@ class TypeHandler:
     @staticmethod
     def to_date(value: Any) -> date | None:
         """Convert value to date."""
-        if value is None or (isinstance(value, float) and pd.isna(value)):
+        if TypeHandler._is_null(value):
             return None
         if isinstance(value, str) and value.strip() == '':
             return None
@@ -139,7 +149,7 @@ class TypeHandler:
     @staticmethod
     def to_bytes(value: Any) -> bytes | None:
         """Convert value to bytes."""
-        if value is None or (isinstance(value, float) and pd.isna(value)):
+        if TypeHandler._is_null(value):
             return None
         if isinstance(value, bytes):
             return value
@@ -150,7 +160,7 @@ class TypeHandler:
     @staticmethod
     def to_json(value: Any) -> dict | list | None:
         """Convert value to JSON (dict or list)."""
-        if value is None or (isinstance(value, float) and pd.isna(value)):
+        if TypeHandler._is_null(value):
             return None
         if isinstance(value, (dict, list)):
             return value

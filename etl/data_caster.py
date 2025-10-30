@@ -55,9 +55,14 @@ class DataCaster:
         Returns:
             Casted value or None if casting fails
         """
-        # Handle required fields
-        if column.mode == "REQUIRED" and (value is None or (isinstance(value, float) and pd.isna(value))):
-            raise ValueError(f"Required column '{column.name}' cannot be null")
+        # Handle required fields - check for None or pd.NA
+        if column.mode == "REQUIRED":
+            try:
+                if value is None or pd.isna(value):
+                    raise ValueError(f"Required column '{column.name}' cannot be null")
+            except (TypeError, ValueError) as e:
+                if value is None:
+                    raise ValueError(f"Required column '{column.name}' cannot be null")
         
         # Get the appropriate type handler
         handler = TYPE_HANDLERS.get(column.type)
