@@ -37,7 +37,7 @@ class TypeHandler:
     @staticmethod
     def to_string(value: Any) -> str | None:
         """Convert value to string."""
-        if value is None or (isinstance(value, float) and pd.isna(value)):
+        if value is None or pd.isna(value):
             return None
         return str(value)
     

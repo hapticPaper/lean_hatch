@@ -10,3 +10,9 @@
 
 .conda/
 __pycache__/*
+
+# ETL outputs
+*.parquet
+*.csv
+/tmp/
+.pytest_cache/

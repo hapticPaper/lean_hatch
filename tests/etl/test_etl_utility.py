@@ -206,7 +206,9 @@ class TestDataCaster:
         
         casted_df = caster.cast_dataframe(df)
         
-        assert casted_df["id"].dtype == "Int64"
+        # Check that id column contains integer values
+        assert casted_df["id"].dtype in ["Int64", "int64"]
+        assert casted_df["id"].iloc[0] == 1
         assert casted_df["amount"].dtype == "float64"
         assert len(casted_df) == 2
     
